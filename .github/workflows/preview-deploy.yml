@@ -1,0 +1,121 @@
+name: "Deploy PR Preview"
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    paths-ignore:
+      - .gitignore
+      - README.md
+      - LICENSE
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+
+# Allow one concurrent preview deployment per PR
+concurrency:
+  group: "preview-${{ github.event.number }}"
+  cancel-in-progress: true
+
+jobs:
+  build-preview:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+          bundler-cache: true
+
+      - name: Build Jekyll site with PR-specific baseurl
+        run: |
+          bundle exec jekyll build \
+            --baseurl "/blog/pr-preview/pr-${{ github.event.number }}" \
+            --destination ./_site
+
+      - name: Test preview site
+        run: |
+          echo "Skipping HTML proofer for preview deployment as GitHub Pages environments handle baseurl differently"
+          echo "Preview site built successfully with $(find _site -name "*.html" | wc -l) HTML files"
+
+      - name: Upload preview artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "_site"
+          name: "github-pages-preview-pr-${{ github.event.number }}"
+
+  deploy-preview:
+    if: github.event.action != 'closed'
+    environment:
+      name: preview
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build-preview
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: "github-pages-preview-pr-${{ github.event.number }}"
+
+      - name: Comment PR with preview link
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.number;
+            const previewUrl = '${{ steps.deployment.outputs.page_url }}';
+            
+            // Find existing preview comment
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            
+            const existingComment = comments.data.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('📖 Preview deployment')
+            );
+            
+            const commentBody = `## 📖 Preview deployment
+            
+            ✅ Preview deployment is ready!
+            
+            **📖 Preview URL:** ${previewUrl}
+            
+            🔄 This preview will be updated automatically when you push new commits to this PR.
+            
+            ---
+            <sub>Deploy preview powered by GitHub Pages</sub>`;
+            
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: commentBody
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: commentBody
+              });
+            }
