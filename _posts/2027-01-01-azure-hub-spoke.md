@@ -169,7 +169,7 @@ Beispiel für eine Private DNS Zone für Azure Storage:
 
 ```hcl
 resource "azurerm_private_dns_zone" "blob" {
-  name                = "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)"
+  name                = "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)"
   resource_group_name = azurerm_resource_[group.hub.name](http://group.hub.name)
 }
 
@@ -190,7 +190,7 @@ Ohne diese Konfiguration bekommen Spokes die **öffentliche IP** von PaaS-Servic
 
 </aside>
 
-**PROMPT:** Create a split comparison diagram showing Private DNS resolution in Azure Hub-and-Spoke. Left side (correct setup, green): Show Hub VNet with Private DNS Zone ([privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)), connected via Virtual Network Link to Spoke VNet. Spoke resolves [storage.blob.core.windows.net](http://storage.blob.core.windows.net) to private IP 10.x.x.x via Private Endpoint. Right side (incorrect setup, red): Show Spoke without DNS link, resolving to public IP. Use German labels "Korrekt ✓" and "Fehler ✗". Azure colors, clean technical diagram style.
+**PROMPT:** Create a split comparison diagram showing Private DNS resolution in Azure Hub-and-Spoke. Left side (correct setup, green): Show Hub VNet with Private DNS Zone ([privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)), connected via Virtual Network Link to Spoke VNet. Spoke resolves [storage.blob.core.windows.net](https://storage.blob.core.windows.net) to private IP 10.x.x.x via Private Endpoint. Right side (incorrect setup, red): Show Spoke without DNS link, resolving to public IP. Use German labels "Korrekt ✓" and "Fehler ✗". Azure colors, clean technical diagram style.
 
 ## Subnet-Sizing: Klein und fokussiert
 
