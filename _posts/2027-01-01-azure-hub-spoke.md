@@ -68,7 +68,7 @@ Die Spokes sind mit dem Hub via **VNet Peering** verbunden, aber **nicht direkt 
 Das sorgt für **Centralized Control** bei gleichzeitig hoher Isolation.
 
 
-> 'Best Practice': Spokes sollten unabhängig voneinander deploybar sein. Wenn ein Spoke ausfällt oder neu aufgebaut wird, darf das keine Auswirkungen auf andere Spokes haben.
+> **Best Practice**: Spokes sollten unabhängig voneinander deploybar sein. Wenn ein Spoke ausfällt oder neu aufgebaut wird, darf das keine Auswirkungen auf andere Spokes haben.
 {: .prompt-tip }
 
 ### Komponenten im Hub
@@ -123,7 +123,7 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
 
 
 
-> 'Wichtig': VNet Peering ist **nicht transitiv**. Spoke A kann nicht direkt mit Spoke B kommunizieren, selbst wenn beide mit dem Hub gepeert sind. Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden (via Firewall oder 
+> **Wichtig**: VNet Peering ist **nicht transitiv**. Spoke A kann nicht direkt mit Spoke B kommunizieren, selbst wenn beide mit dem Hub gepeert sind. Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden (via Firewall oder 
 {: .prompt-warning }
 
 
@@ -155,12 +155,10 @@ resource "azurerm_route_table" "spoke" {
 }
 ```
 
-<aside>
-💡
 
-**Pro-Tipp**: Nutze Azure Firewall Manager, um Firewall Policies zentral zu verwalten und auf mehrere Firewall-Instanzen zu verteilen (z. B. in Multi-Region-Setups).
 
-</aside>
+>**Pro-Tipp**: Nutze Azure Firewall Manager, um Firewall Policies zentral zu verwalten und auf mehrere Firewall-Instanzen zu verteilen (z. B. in Multi-Region-Setups).
+{: .prompt-tip }
 
 **PROMPT:** Create a technical diagram showing User Defined Routes (UDR) and Azure Firewall routing in Hub-and-Spoke. Show a Spoke VNet with a Route Table attached, containing a default route "0.0.0.0/0 → Azure Firewall IP". Show traffic flowing from a VM in the Spoke through the Route Table, then to Azure Firewall in the Hub VNet, then either to another Spoke or to the Internet. Use arrows to indicate traffic flow, label each component clearly in German. Azure blue color scheme, clean professional style, flat design.
 
@@ -192,12 +190,9 @@ resource "azurerm_private_dns_zone_virtual_network_link" "spoke_to_blob_zone" {
 
 Ohne diese Konfiguration bekommen Spokes die **öffentliche IP** von PaaS-Services aufgelöst – selbst wenn Private Endpoints existieren. Das führt zu Connectivity-Problemen und oft zu stundenlangem Troubleshooting.
 
-<aside>
-⚠️
 
-**Stolperstein**: Wenn Private DNS Zones fehlen oder nicht korrekt verlinkt sind, greifen Ressourcen im Spoke auf öffentliche Endpoints zu – auch wenn Private Endpoints provisioniert wurden. Das ist schwer zu debuggen.
-
-</aside>
+>**Stolperstein**: Wenn Private DNS Zones fehlen oder nicht korrekt verlinkt sind, greifen Ressourcen im Spoke auf öffentliche Endpoints zu – auch wenn Private Endpoints provisioniert wurden. Das ist schwer zu debuggen.
+{: .prompt-warning }
 
 **PROMPT:** Create a split comparison diagram showing Private DNS resolution in Azure Hub-and-Spoke. Left side (correct setup, green): Show Hub VNet with Private DNS Zone ([privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)), connected via Virtual Network Link to Spoke VNet. Spoke resolves [storage.blob.core.windows.net](https://storage.blob.core.windows.net) to private IP 10.x.x.x via Private Endpoint. Right side (incorrect setup, red): Show Spoke without DNS link, resolving to public IP. Use German labels "Korrekt ✓" and "Fehler ✗". Azure colors, clean technical diagram style.
 
@@ -222,12 +217,10 @@ Das ist völlig ausreichend, selbst für größere Cluster.
 - Klarere Trennung von Workloads
 - NSG-Regeln bleiben übersichtlich
 
-<aside>
-✅
 
-**Empfehlung aus der Praxis**: Starte mit `/25` pro Workload. Wenn du merkst, dass es zu klein wird, kannst du immer noch ein zweites Subnet hinzufügen. Zu große Subnets aufzuteilen ist deutlich aufwändiger.
 
-</aside>
+>**Empfehlung aus der Praxis**: Starte mit `/25` pro Workload. Wenn du merkst, dass es zu klein wird, kannst du immer noch ein zweites Subnet hinzufügen. Zu große Subnets aufzuteilen ist deutlich aufwändiger.
+{: .prompt-tip }
 
 ## Governance: Azure Policy für automatische Compliance
 
