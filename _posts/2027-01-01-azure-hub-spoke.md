@@ -30,11 +30,11 @@ In diesem Artikel erkläre ich, warum Hub-and-Spoke in Azure-Umgebungen so gut f
 
 > An example showing the `danger` type prompt.
 {: .prompt-danger }
+
 <!-- markdownlint-restore -->
 
-
-
-> `Zentrale Idee`: Hub-and-Spoke trennt zentrale Shared Services (Hub) von isolierten Workloads (Spokes). Das schafft Kontrolle, Skalierbarkeit und Sicherheit – ohne Komplexität.{: .prompt-tip }
+> `Zentrale Idee`: Hub-and-Spoke trennt zentrale Shared Services (Hub) von isolierten Workloads (Spokes). Das schafft Kontrolle, Skalierbarkeit und Sicherheit – ohne Komplexität.
+{: .prompt-tip }
 
 
 **PROMPT:** Create a professional technical diagram showing Azure Hub-and-Spoke network architecture. Show one central hub VNet in the middle containing icons for Azure Firewall, Private DNS Zones, VPN Gateway, and Azure Bastion. Around the hub, show 3-4 spoke VNets connected via VNet Peering (represented by bidirectional arrows). Each spoke should contain different workload icons (Databricks, AKS, VMs, Storage). Use Azure's blue color scheme. Add labels in German. Make it clean, modern, and suitable for a technical blog post. Style: flat design, professional diagram.
