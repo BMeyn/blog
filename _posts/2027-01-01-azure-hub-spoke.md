@@ -1,3 +1,12 @@
+---
+title: "Hub-and-Spoke-Netzwerke in Azure: Warum diese Architektur in jedem Enterprise-Setup funktioniert"
+date: 2026-01-01 10:00:00 +0000
+categories: [Azure, Architektur]
+tags: [azure]
+pin: false
+---
+
+
 In fast jedem Enterprise-Projekt mit Azure taucht früher oder später die Frage auf: **Wie strukturieren wir unsere Netzwerk-Architektur so, dass sie skaliert, sicher ist und gleichzeitig wartbar bleibt?**
 
 Die Antwort, die sich in der Praxis immer wieder bewährt hat, ist simpel: **Hub-and-Spoke**.
