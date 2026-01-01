@@ -52,12 +52,9 @@ Viele Azure-Setups starten mit einem einzelnen VNet. Das ist völlig in Ordnung 
 
 Ein weiteres Problem: **Flat Networks bieten keine klare Separation**. Wenn alle Workloads im selben VNet liegen, ist es schwer, Blast-Radius zu kontrollieren oder unterschiedliche Security-Level zu enforcing.
 
-<aside>
-⚠️
 
-**Häufiger Stolperstein**: Teams versuchen, Isolation durch immer mehr NSG-Regeln zu erreichen. Das endet in unübersichtlichen, fehleranfälligen Konfigurationen.
-
-</aside>
+> `Häufiger Stolperstein`: Teams versuchen, Isolation durch immer mehr NSG-Regeln zu erreichen. Das endet in unübersichtlichen, fehleranfälligen Konfigurationen.
+{: .prompt-warning }
 
 ## Hub-and-Spoke: Das Konzept
 
@@ -70,12 +67,9 @@ Die Spokes sind mit dem Hub via **VNet Peering** verbunden, aber **nicht direkt 
 
 Das sorgt für **Centralized Control** bei gleichzeitig hoher Isolation.
 
-<aside>
-✅
 
-**Best Practice**: Spokes sollten unabhängig voneinander deploybar sein. Wenn ein Spoke ausfällt oder neu aufgebaut wird, darf das keine Auswirkungen auf andere Spokes haben.
-
-</aside>
+> 'Best Practice': Spokes sollten unabhängig voneinander deploybar sein. Wenn ein Spoke ausfällt oder neu aufgebaut wird, darf das keine Auswirkungen auf andere Spokes haben.
+{: .prompt-tip }
 
 ### Komponenten im Hub
 
@@ -127,12 +121,12 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
 }
 ```
 
-<aside>
-⚠️
 
-**Wichtig**: VNet Peering ist **nicht transitiv**. Spoke A kann nicht direkt mit Spoke B kommunizieren, selbst wenn beide mit dem Hub gepeert sind. Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden (via Firewall oder NVA).
 
-</aside>
+> 'Wichtig': VNet Peering ist **nicht transitiv**. Spoke A kann nicht direkt mit Spoke B kommunizieren, selbst wenn beide mit dem Hub gepeert sind. Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden (via Firewall oder 
+{: .prompt-warning }
+
+
 
 **PROMPT:** Create a technical diagram illustrating VNet Peering non-transitivity in Azure. Show three VNets: Hub (center), Spoke A (left), and Spoke B (right). Draw green bidirectional arrows between Hub-Spoke A and Hub-Spoke B labeled "VNet Peering ✓". Draw a red crossed-out line between Spoke A and Spoke B labeled "Keine direkte Verbindung ✗". Add a blue arrow showing traffic flow from Spoke A → Hub → Spoke B with "Traffic via Firewall" label. Use Azure color scheme, clean flat design, suitable for technical documentation in German.
 
