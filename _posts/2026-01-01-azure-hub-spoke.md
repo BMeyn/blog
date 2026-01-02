@@ -2,10 +2,9 @@
 title: "Hub-and-Spoke-Netzwerke in Azure: Warum diese Architektur in jedem Enterprise-Setup funktioniert"
 date: 2026-01-01 10:00:00 +0000
 categories: [Azure, Architektur]
-tags: [azure]
+tags: [azure, networking, infrastructure-as-code, architecture]
 pin: false
 ---
-
 
 In fast jedem Enterprise-Projekt mit Azure taucht früher oder später die Frage auf: **Wie strukturieren wir unsere Netzwerk-Architektur so, dass sie skaliert, sicher ist und gleichzeitig wartbar bleibt?**
 
@@ -15,10 +14,12 @@ Dieses Architekturmuster ist kein neuer Trend. Es existiert seit Jahren und wird
 
 In diesem Artikel erkläre ich, warum Hub-and-Spoke in Azure-Umgebungen so gut funktioniert, wie man es technisch umsetzt und welche Stolpersteine es in der Praxis gibt.
 
+<aside>
+💡
 
-> **Zentrale Idee**: Hub-and-Spoke trennt zentrale Shared Services (Hub) von isolierten Workloads (Spokes). Das schafft Kontrolle, Skalierbarkeit und Sicherheit – ohne Komplexität.
-{: .prompt-info }
+**Zentrale Idee**: Hub-and-Spoke trennt zentrale Shared Services (Hub) von isolierten Workloads (Spokes). Das schafft Kontrolle, Skalierbarkeit und Sicherheit – ohne Komplexität.
 
+</aside>
 
 ## Das Problem: Flat Networks skalieren nicht
 
@@ -33,9 +34,12 @@ Viele Azure-Setups starten mit einem einzelnen VNet. Das ist völlig in Ordnung 
 
 Ein weiteres Problem: **Flat Networks bieten keine klare Separation**. Wenn alle Workloads im selben VNet liegen, ist es schwer, Blast-Radius zu kontrollieren oder unterschiedliche Security-Level zu enforcing.
 
+<aside>
+⚠️
 
-> **Häufiger Stolperstein**: Teams versuchen, Isolation durch immer mehr NSG-Regeln zu erreichen. Das endet in unübersichtlichen, fehleranfälligen Konfigurationen.
-{: .prompt-warning }
+**Vorsicht:** Teams versuchen, Isolation durch immer mehr NSG-Regeln zu erreichen. Das endet in unübersichtlichen, fehleranfälligen Konfigurationen.
+
+</aside>
 
 ## Hub-and-Spoke: Das Konzept
 
@@ -48,9 +52,12 @@ Die Spokes sind mit dem Hub via **VNet Peering** verbunden, aber **nicht direkt 
 
 Das sorgt für **Centralized Control** bei gleichzeitig hoher Isolation.
 
+<aside>
+✅
 
-> **Best Practice**: Spokes sollten unabhängig voneinander deploybar sein. Wenn ein Spoke ausfällt oder neu aufgebaut wird, darf das keine Auswirkungen auf andere Spokes haben.
-{: .prompt-tip }
+**Pro-Tipp**: Spokes sollten unabhängig voneinander deploybar sein. Wenn ein Spoke ausfällt oder neu aufgebaut wird, darf das keine Auswirkungen auf andere Spokes haben.
+
+</aside>
 
 ### Komponenten im Hub
 
@@ -102,11 +109,12 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
 }
 ```
 
+<aside>
+❗
 
+**Wichtig**: VNet Peering ist **nicht transitiv**. Spoke A kann nicht direkt mit Spoke B kommunizieren, selbst wenn beide mit dem Hub gepeert sind. Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden (via Firewall oder NVA).
 
-> **Wichtig**: VNet Peering ist **nicht transitiv**. Spoke A kann nicht direkt mit Spoke B kommunizieren, selbst wenn beide mit dem Hub gepeert sind. Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden (via Firewall oder 
-{: .prompt-warning }
-
+</aside>
 
 ### Routing über Azure Firewall
 
@@ -133,11 +141,12 @@ resource "azurerm_route_table" "spoke" {
 }
 ```
 
+<aside>
+✅
 
+**Pro-Tipp**: Nutze Azure Firewall Manager, um Firewall Policies zentral zu verwalten und auf mehrere Firewall-Instanzen zu verteilen (z. B. in Multi-Region-Setups).
 
->**Pro-Tipp**: Nutze Azure Firewall Manager, um Firewall Policies zentral zu verwalten und auf mehrere Firewall-Instanzen zu verteilen (z. B. in Multi-Region-Setups).
-{: .prompt-tip }
-
+</aside>
 
 ## DNS: Private DNS Zones im Hub
 
@@ -153,7 +162,7 @@ Beispiel für eine Private DNS Zone für Azure Storage:
 
 ```hcl
 resource "azurerm_private_dns_zone" "blob" {
-  name                = "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)"
+  name                = "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)"
   resource_group_name = azurerm_resource_[group.hub.name](http://group.hub.name)
 }
 
@@ -167,10 +176,12 @@ resource "azurerm_private_dns_zone_virtual_network_link" "spoke_to_blob_zone" {
 
 Ohne diese Konfiguration bekommen Spokes die **öffentliche IP** von PaaS-Services aufgelöst – selbst wenn Private Endpoints existieren. Das führt zu Connectivity-Problemen und oft zu stundenlangem Troubleshooting.
 
+<aside>
+⚠️
 
->**Stolperstein**: Wenn Private DNS Zones fehlen oder nicht korrekt verlinkt sind, greifen Ressourcen im Spoke auf öffentliche Endpoints zu – auch wenn Private Endpoints provisioniert wurden. Das ist schwer zu debuggen.
-{: .prompt-warning }
+**Vorsicht:** Wenn Private DNS Zones fehlen oder nicht korrekt verlinkt sind, greifen Ressourcen im Spoke auf öffentliche Endpoints zu – auch wenn Private Endpoints provisioniert wurden. Das ist schwer zu debuggen.
 
+</aside>
 
 ## Subnet-Sizing: Klein und fokussiert
 
@@ -193,10 +204,12 @@ Das ist völlig ausreichend, selbst für größere Cluster.
 - Klarere Trennung von Workloads
 - NSG-Regeln bleiben übersichtlich
 
+<aside>
+✅
 
+**Pro-Tipp**: Starte mit `/25` pro Workload. Wenn du merkst, dass es zu klein wird, kannst du immer noch ein zweites Subnet hinzufügen. Zu große Subnets aufzuteilen ist deutlich aufwändiger.
 
->**Empfehlung aus der Praxis**: Starte mit `/25` pro Workload. Wenn du merkst, dass es zu klein wird, kannst du immer noch ein zweites Subnet hinzufügen. Zu große Subnets aufzuteilen ist deutlich aufwändiger.
-{: .prompt-tip }
+</aside>
 
 ## Governance: Azure Policy für automatische Compliance
 
@@ -243,8 +256,12 @@ Beispiel für eine Policy, die prüft, ob ein VNet mit dem Hub gepeert ist:
 
 Diese Policies können auf Management Group-Level angewendet werden und sorgen dafür, dass **kein Team versehentlich vom Standard abweicht**.
 
-> **Zielsetzung**: Azure Policy sollte so konfiguriert sein, dass es unmöglich ist, unsichere oder non-compliant Netzwerk-Konfigurationen zu erstellen – ohne dass Teams darüber nachdenken müssen.
-{: .prompt-tip }
+<aside>
+✅
+
+**Pro-Tipp:** Azure Policy sollte so konfiguriert sein, dass es unmöglich ist, unsichere oder non-compliant Netzwerk-Konfigurationen zu erstellen – ohne dass Teams darüber nachdenken müssen.
+
+</aside>
 
 ## Praxisbeispiel: Data Platform mit Databricks
 
@@ -272,25 +289,28 @@ Ein typisches Szenario: Ein Unternehmen möchte eine **Databricks Lakehouse Plat
 
 **Was funktioniert hat:**
 
-  ✅ Databricks Cluster starten in < 5 Minuten (keine DNS-Probleme)
+✅ Databricks Cluster starten in < 5 Minuten (keine DNS-Probleme)
 
-  ✅ Storage-Zugriff läuft vollständig privat
+✅ Storage-Zugriff läuft vollständig privat
 
-  ✅ Firewall-Logs zeigen alle Egress-Verbindungen transparent
+✅ Firewall-Logs zeigen alle Egress-Verbindungen transparent
 
-  ✅ Teams können neue Spokes selbstständig erstellen (via Terraform-Module)
+✅ Teams können neue Spokes selbstständig erstellen (via Terraform-Module)
 
 **Was nicht funktioniert hat:**
 
-  ❌ Initiales Setup ohne korrekte Private DNS Zones führte zu 443-Timeouts
+❌ Initiales Setup ohne korrekte Private DNS Zones führte zu 443-Timeouts
 
-  ❌ Fehlende NSG-Rules für Databricks Subnets blockierten Cluster-Start
+❌ Fehlende NSG-Rules für Databricks Subnets blockierten Cluster-Start
 
-  ❌ Zu aggressive Firewall-Rules verhinderten Zugriff auf Databricks Control Plane
+❌ Zu aggressive Firewall-Rules verhinderten Zugriff auf Databricks Control Plane
 
+<aside>
+✅
 
-> **Lesson Learned**: Teste Private Endpoints immer von einer VM innerhalb des Spokes. `nslookup` und `curl` sind deine Freunde. Wenn DNS falsch auflöst, funktioniert nichts – egal wie korrekt die Firewall-Regeln sind.
-{: .prompt-warning }
+**Pro-Tipp:** Teste Private Endpoints immer von einer VM innerhalb des Spokes. `nslookup` und `curl` sind deine Freunde. Wenn DNS falsch auflöst, funktioniert nichts – egal wie korrekt die Firewall-Regeln sind.
+
+</aside>
 
 ## Alternativen: Wann Hub-and-Spoke nicht passt
 
@@ -318,9 +338,12 @@ In sehr kleinen Umgebungen (2–3 VNets) kann ein **Full Mesh** via direktem VNe
 
 **Aber Vorsicht:** Mesh skaliert nicht. Bei 10 VNets brauchst du 45 Peerings. Bei 20 VNets sind es 190.
 
+<aside>
+❗
 
-> **Regel**: Sobald du mehr als 5 VNets hast, wechsel zu Hub-and-Spoke. Mesh wird schnell unübersichtlich und nicht mehr wartbar.
-{: .prompt-warning }
+**Wichtig**: Sobald du mehr als 5 VNets hast, wechsel zu Hub-and-Spoke. Mesh wird schnell unübersichtlich und nicht mehr wartbar.
+
+</aside>
 
 ## Kosten: Was kostet Hub-and-Spoke?
 
@@ -359,16 +382,18 @@ Manche Unternehmen brauchen unterschiedliche Security-Level:
 
 Das kann via **separate NSGs und Firewall Rules** umgesetzt werden – alles zentral im Hub verwaltet.
 
+<aside>
+💡
 
-> **Die wichtigsten Erkenntnisse auf einen Blick**:
+**Die wichtigsten Erkenntnisse auf einen Blick**:
+
 - **Hub-and-Spoke trennt Shared Services von Workloads**: Das schafft Kontrolle, Skalierbarkeit und Sicherheit
 - **VNet Peering ist nicht transitiv**: Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden
 - **Private DNS Zones sind kritisch**: Ohne korrekte DNS-Konfiguration funktionieren Private Endpoints nicht
 - **Azure Policy automatisiert Compliance**: Verhindert, dass Teams versehentlich unsichere Konfigurationen erstellen
 - **Hub-and-Spoke spart Kosten**: Shared Services müssen nur einmal bezahlt werden, ab 3–4 Spokes lohnt es sich
 - **Kleine Subnets sind besser**: /25 pro Workload ist meist ausreichend und deutlich wartbarer
-{: .prompt-tip }
-
+</aside>
 
 ## Fazit
 
