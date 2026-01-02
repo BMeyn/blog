@@ -360,19 +360,14 @@ Manche Unternehmen brauchen unterschiedliche Security-Level:
 Das kann via **separate NSGs und Firewall Rules** umgesetzt werden – alles zentral im Hub verwaltet.
 
 
-**Die wichtigsten Erkenntnisse auf einen Blick**:
-
+> **Die wichtigsten Erkenntnisse auf einen Blick**:
 ✅ **Hub-and-Spoke trennt Shared Services von Workloads**: Das schafft Kontrolle, Skalierbarkeit und Sicherheit
-
 ✅ **VNet Peering ist nicht transitiv**: Alle Inter-Spoke-Kommunikation muss explizit über den Hub geroutet werden
-
 ✅ **Private DNS Zones sind kritisch**: Ohne korrekte DNS-Konfiguration funktionieren Private Endpoints nicht
-
 ✅ **Azure Policy automatisiert Compliance**: Verhindert, dass Teams versehentlich unsichere Konfigurationen erstellen
-
 ✅ **Hub-and-Spoke spart Kosten**: Shared Services müssen nur einmal bezahlt werden, ab 3–4 Spokes lohnt es sich
-
 ✅ **Kleine Subnets sind besser**: /25 pro Workload ist meist ausreichend und deutlich wartbarer
+{: .prompt-tip }
 
 
 ## Fazit
