@@ -243,12 +243,8 @@ Beispiel für eine Policy, die prüft, ob ein VNet mit dem Hub gepeert ist:
 
 Diese Policies können auf Management Group-Level angewendet werden und sorgen dafür, dass **kein Team versehentlich vom Standard abweicht**.
 
-<aside>
-🎯
-
-**Zielsetzung**: Azure Policy sollte so konfiguriert sein, dass es unmöglich ist, unsichere oder non-compliant Netzwerk-Konfigurationen zu erstellen – ohne dass Teams darüber nachdenken müssen.
-
-</aside>
+> **Zielsetzung**: Azure Policy sollte so konfiguriert sein, dass es unmöglich ist, unsichere oder non-compliant Netzwerk-Konfigurationen zu erstellen – ohne dass Teams darüber nachdenken müssen.
+{: .prompt-tip }
 
 ## Praxisbeispiel: Data Platform mit Databricks
 
@@ -276,29 +272,25 @@ Ein typisches Szenario: Ein Unternehmen möchte eine **Databricks Lakehouse Plat
 
 **Was funktioniert hat:**
 
-✅ Databricks Cluster starten in < 5 Minuten (keine DNS-Probleme)
+  ✅ Databricks Cluster starten in < 5 Minuten (keine DNS-Probleme)
 
-✅ Storage-Zugriff läuft vollständig privat
+  ✅ Storage-Zugriff läuft vollständig privat
 
-✅ Firewall-Logs zeigen alle Egress-Verbindungen transparent
+  ✅ Firewall-Logs zeigen alle Egress-Verbindungen transparent
 
-✅ Teams können neue Spokes selbstständig erstellen (via Terraform-Module)
+  ✅ Teams können neue Spokes selbstständig erstellen (via Terraform-Module)
 
 **Was nicht funktioniert hat:**
 
-❌ Initiales Setup ohne korrekte Private DNS Zones führte zu 443-Timeouts
+  ❌ Initiales Setup ohne korrekte Private DNS Zones führte zu 443-Timeouts
 
-❌ Fehlende NSG-Rules für Databricks Subnets blockierten Cluster-Start
+  ❌ Fehlende NSG-Rules für Databricks Subnets blockierten Cluster-Start
 
-❌ Zu aggressive Firewall-Rules verhinderten Zugriff auf Databricks Control Plane
+  ❌ Zu aggressive Firewall-Rules verhinderten Zugriff auf Databricks Control Plane
 
-<aside>
-⚠️
 
-**Lesson Learned**: Teste Private Endpoints immer von einer VM innerhalb des Spokes. `nslookup` und `curl` sind deine Freunde. Wenn DNS falsch auflöst, funktioniert nichts – egal wie korrekt die Firewall-Regeln sind.
-
-</aside>
-
+> **Lesson Learned**: Teste Private Endpoints immer von einer VM innerhalb des Spokes. `nslookup` und `curl` sind deine Freunde. Wenn DNS falsch auflöst, funktioniert nichts – egal wie korrekt die Firewall-Regeln sind.
+{: .prompt-warning }
 
 ## Alternativen: Wann Hub-and-Spoke nicht passt
 
@@ -326,12 +318,9 @@ In sehr kleinen Umgebungen (2–3 VNets) kann ein **Full Mesh** via direktem VNe
 
 **Aber Vorsicht:** Mesh skaliert nicht. Bei 10 VNets brauchst du 45 Peerings. Bei 20 VNets sind es 190.
 
-<aside>
-⚠️
 
-**Regel**: Sobald du mehr als 5 VNets hast, wechsel zu Hub-and-Spoke. Mesh wird schnell unübersichtlich und nicht mehr wartbar.
-
-</aside>
+> **Regel**: Sobald du mehr als 5 VNets hast, wechsel zu Hub-and-Spoke. Mesh wird schnell unübersichtlich und nicht mehr wartbar.
+{: .prompt-warning }
 
 ## Kosten: Was kostet Hub-and-Spoke?
 
@@ -370,8 +359,6 @@ Manche Unternehmen brauchen unterschiedliche Security-Level:
 
 Das kann via **separate NSGs und Firewall Rules** umgesetzt werden – alles zentral im Hub verwaltet.
 
-<aside>
-🎯
 
 **Die wichtigsten Erkenntnisse auf einen Blick**:
 
@@ -387,7 +374,6 @@ Das kann via **separate NSGs und Firewall Rules** umgesetzt werden – alles zen
 
 ✅ **Kleine Subnets sind besser**: /25 pro Workload ist meist ausreichend und deutlich wartbarer
 
-</aside>
 
 ## Fazit
 
