@@ -17,7 +17,7 @@ In diesem Artikel erkläre ich, warum Hub-and-Spoke in Azure-Umgebungen so gut f
 
 
 > **Zentrale Idee**: Hub-and-Spoke trennt zentrale Shared Services (Hub) von isolierten Workloads (Spokes). Das schafft Kontrolle, Skalierbarkeit und Sicherheit – ohne Komplexität.
-{: .prompt-tip }
+{: .prompt-info }
 
 
 ## Das Problem: Flat Networks skalieren nicht
