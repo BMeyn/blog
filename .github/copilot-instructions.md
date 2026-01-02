@@ -7,39 +7,48 @@ Always reference these instructions first and fallback to search or bash command
 ## Working Effectively
 
 ### Bootstrap and Setup
+
 Run these commands to set up the development environment from a fresh clone:
 
 1. **Install build tools (if not already available):**
+
    ```bash
    # Ubuntu/Debian systems:
    sudo apt-get update && sudo apt-get install -y build-essential
-   
+
    # RHEL/CentOS/Fedora systems:
    sudo yum groupinstall -y "Development Tools"
    # OR: sudo dnf groupinstall -y "Development Tools"
    ```
+
    **CRITICAL**: Build tools (gcc, make, etc.) are required for native gem compilation. GitHub Actions runners and DevContainers include these by default.
 
 2. **Configure Ruby environment and PATH:**
+
    ```bash
    export PATH="$HOME/.local/share/gem/ruby/3.2.0/bin:$PATH"
    ```
+
    **CRITICAL**: Always export this PATH in every terminal session. Ruby gems install to user directory to avoid permission issues.
 
 3. **Install Bundler (one-time setup):**
+
    ```bash
    gem install bundler --user-install
    ```
 
 4. **Configure Bundler to install gems locally:**
+
    ```bash
    bundle config set --local path 'vendor/bundle'
    ```
 
 5. **Install dependencies:**
+
    ```bash
    bundle install
    ```
+
    Takes approximately 30 seconds. NEVER CANCEL. Set timeout to 120+ seconds.
 
 6. **Initialize git submodules for Chirpy static assets:**
@@ -49,16 +58,21 @@ Run these commands to set up the development environment from a fresh clone:
    Required for proper theme functionality. Takes 5-10 seconds.
 
 ### Build and Test
+
 - **Build the site:**
+
   ```bash
   bundle exec jekyll build
   ```
+
   Takes approximately 1.3 seconds. NEVER CANCEL. Set timeout to 30+ seconds.
 
 - **Test the site with HTML validation:**
+
   ```bash
   bash tools/test.sh
   ```
+
   Takes approximately 2.4 seconds total (includes build + validation). NEVER CANCEL. Set timeout to 60+ seconds.
 
 - **Production build (like CI):**
@@ -68,16 +82,21 @@ Run these commands to set up the development environment from a fresh clone:
   Takes approximately 1.3 seconds.
 
 ### Development Server
+
 - **Start development server:**
+
   ```bash
   bundle exec jekyll serve --livereload --host 127.0.0.1
   ```
+
   Serves at http://127.0.0.1:4000/blog/ with live reload enabled.
 
 - **Using the helper script:**
+
   ```bash
   bash tools/run.sh --host 127.0.0.1
   ```
+
   Alternative method using the provided script.
 
 - **Production mode development:**
@@ -88,24 +107,29 @@ Run these commands to set up the development environment from a fresh clone:
 ## Validation
 
 ### Manual Testing Requirements
+
 **CRITICAL**: After making any changes, ALWAYS validate with these scenarios:
 
 1. **Build validation:**
+
    - Run `bundle exec jekyll build` and verify it completes without errors
    - Check `_site` directory is created with expected content
 
 2. **Development server test:**
+
    - Start server with `bundle exec jekyll serve --host 127.0.0.1`
    - Verify site loads at http://127.0.0.1:4000/blog/
    - Confirm author name "Bjarne Meyn" appears correctly
    - Test at least one blog post renders properly
 
 3. **HTML proofer validation:**
+
    - Run `bash tools/test.sh`
    - Verify all internal links work
    - Confirm no broken references or missing assets
 
 4. **Live reload functionality:**
+
    - Start server with `--livereload` flag
    - Make a small change to any markdown file
    - Verify browser updates automatically
@@ -118,46 +142,55 @@ Run these commands to set up the development environment from a fresh clone:
    - Check that navigation menu works (About, Archives, etc.)
 
 ### CI/CD Validation
+
 Always validate changes match the GitHub Actions workflow:
+
 - Build succeeds: `JEKYLL_ENV=production bundle exec jekyll build -d "_site/blog"`
 - Tests pass: `bundle exec htmlproofer _site --disable-external --ignore-urls "/^http:\/\/127.0.0.1/,/^http:\/\/0.0.0.0/,/^http:\/\/localhost/"`
 
 ## Important File Locations
 
 ### Core Configuration
+
 - `_config.yml` - Main Jekyll site configuration
 - `Gemfile` - Ruby dependencies
 - `.github/workflows/pages-deploy.yml` - CI/CD pipeline
 
 ### Content Areas
+
 - `_posts/` - Blog posts (markdown files with front matter)
 - `_tabs/` - Static pages (About, Archives, Categories, Tags)
 - `assets/img/` - Images and media files
 - `assets/lib/` - Chirpy theme static assets (git submodule)
 
 ### Development Tools
+
 - `tools/run.sh` - Development server helper script
 - `tools/test.sh` - Build and test script
 - `.devcontainer/` - VS Code development container configuration
 - `vendor/bundle/` - Local gem installation directory (auto-created)
 
 ### Generated Content
+
 - `_site/` - Generated static site (auto-created during build)
 
 ## Common Tasks
 
 ### Adding New Blog Posts
+
 1. Create new file in `_posts/` with format: `YYYY-MM-DD-title.md`
 2. Include proper front matter with title, date, categories, and tags
 3. Test with development server to verify rendering
 4. Validate with `bash tools/test.sh`
 
 ### Modifying Theme Styles
+
 - Custom styles go in `assets/css/`
 - Theme modifications may require understanding Chirpy theme structure
 - Always test both development and production builds
 
 ### Working with Images
+
 - Place images in `assets/img/`
 - Reference with relative paths: `/assets/img/filename.jpg`
 - Optimize images for web before committing
@@ -165,8 +198,9 @@ Always validate changes match the GitHub Actions workflow:
 ## Timing Expectations and Timeouts
 
 **CRITICAL TIMING INFORMATION**:
+
 - Dependency installation: ~30 seconds - Set timeout to 120+ seconds
-- Site build: ~1.3 seconds - Set timeout to 30+ seconds  
+- Site build: ~1.3 seconds - Set timeout to 30+ seconds
 - HTML validation: ~2.4 seconds total - Set timeout to 60+ seconds
 - Development server startup: ~2-3 seconds - Set timeout to 30+ seconds
 - Git submodule init: ~5-10 seconds - Set timeout to 30+ seconds
@@ -176,11 +210,13 @@ Always validate changes match the GitHub Actions workflow:
 ## Platform Requirements
 
 ### Ruby Environment
+
 - Ruby 3.2.3+ (tested with 3.2.3)
 - Bundler 2.7.1+
 - Gems installed in user directory to avoid permission issues
 
 ### System Dependencies
+
 - Ruby 3.2.3+ (tested with 3.2.3)
 - Bundler 2.7.1+
 - **Build tools** (gcc, make, etc.) - **CRITICAL** for native gem compilation
@@ -190,6 +226,7 @@ Always validate changes match the GitHub Actions workflow:
 - curl (for testing)
 
 ### Known Issues and Workarounds
+
 - **Build failures with native gems**: Install build-essential or Development Tools package for your system
   - Ubuntu/Debian: `sudo apt-get install -y build-essential`
   - RHEL/CentOS/Fedora: `sudo yum groupinstall -y "Development Tools"`
@@ -202,6 +239,7 @@ Always validate changes match the GitHub Actions workflow:
 ## Troubleshooting
 
 ### Build Failures
+
 1. **Install build tools if missing** (see Platform Requirements)
 2. Verify Ruby/Bundler installation and PATH
 3. Run `bundle install` to update dependencies
@@ -209,11 +247,13 @@ Always validate changes match the GitHub Actions workflow:
 5. Check `_config.yml` for syntax errors
 
 ### Development Server Issues
+
 1. Ensure port 4000 is available
 2. Check baseurl setting in `_config.yml` (should be "/blog")
 3. Verify all dependencies are installed
 
 ### Test Failures
+
 1. Build the site first with `bundle exec jekyll build`
 2. Check for broken internal links
 3. Verify all referenced images exist in `assets/img/`
@@ -221,6 +261,7 @@ Always validate changes match the GitHub Actions workflow:
 ## Quick Reference Commands
 
 ### Essential Development Workflow
+
 ```bash
 # Set PATH (required for each session)
 export PATH="$HOME/.local/share/gem/ruby/3.2.0/bin:$PATH"
@@ -237,6 +278,7 @@ bash tools/test.sh  # Validate changes
 ```
 
 ### Common File Operations
+
 ```bash
 ls -la                          # Repository root
 ls -la _posts/                  # Blog posts
@@ -246,92 +288,10 @@ cat _config.yml                 # Site configuration
 ```
 
 ### Status and Information
+
 ```bash
 bundle exec jekyll --version    # Jekyll version
 ruby --version                  # Ruby version
 bundle --version                # Bundler version
 git submodule status            # Submodule status
 ```
-
-# GitHub Copilot Technical Blog Writing Style Guide
-
-## 1. Tone & Voice
-- **Professional and technical** – Write for developers and technical professionals who want depth and precision.  
-- **Confident and authoritative** – Demonstrate technical expertise through detailed insights and practical knowledge.  
-- **Direct and focused** – Prioritize technical accuracy and actionable information over entertainment.  
-- **Value-driven** – Every sentence should provide meaningful technical insight or practical guidance.  
-
-> **Example:**  
-> ❌ "If your CPU usage is spiking like it's had too much coffee, that's your signal something needs tuning."  
-> ✅ "CPU usage above 80% sustained for more than 30 seconds typically indicates resource contention requiring immediate optimization."
-
----
-
-## 2. Sentence Structure
-- **Vary sentence length** – Mix short, punchy sentences with longer, explanatory ones.  
-- **Use active voice** – "You can monitor CPU usage" beats "CPU usage can be monitored."  
-- Avoid robotic patterns (don't start every paragraph with "In this article…" or "Firstly…").  
-- Keep paragraphs short (2–5 sentences) to avoid a wall of text.  
-
----
-
-## 3. Word Choice
-- Prefer **precise technical terms** over simplified alternatives when accuracy matters.  
-- Use **industry-standard terminology** that demonstrates technical competence.  
-- Avoid unnecessary filler phrases like "it should be noted that" or "as we have seen previously."  
-- Choose **specificity over generalization** – provide exact configurations, version numbers, and parameters where relevant.  
-
----
-
-## 4. Structure of a Post
-1. **Technical Introduction (1 paragraph)** – State the problem and technical solution clearly.  
-2. **Context and Value Proposition** – Explain why this technical insight matters in real-world scenarios.  
-3. **Core Technical Content** – In-depth technical guidance, code examples, configuration details, and implementation specifics.  
-4. **Practical Implementation** – Real-world application examples and best practices.  
-5. **Conclusion** – Key technical takeaways and next steps.  
-
-### Reading Time Guidelines
-- **Standard posts**: 4-8 minutes reading time (approximately 800-1600 words)
-- **Long-form posts**: Maximum 10 minutes reading time (approximately 2000 words) - only when explicitly specified as a comprehensive guide
-- **Focus on value density**: Every paragraph should provide actionable technical insight  
-
----
-
-## 5. Code & Technical Content
-- Code snippets should be **production-ready, tested, and complete**—include all necessary context for implementation.  
-- Provide **technical explanations** that demonstrate deeper understanding of underlying systems and concepts.  
-- Include **configuration details, version requirements, and dependencies** to ensure reproducibility.  
-- Add **performance considerations and trade-offs** where relevant.  
-
-> **Example:**  
-> ```bash
-> az vm list --output table --query "[?powerState=='VM running'].{Name:name,ResourceGroup:resourceGroup,Location:location,Size:hardwareProfile.vmSize}"
-> # Filters results to running VMs only and displays essential operational data
-> ```
-
----
-
-## 6. Pacing & Flow
-- Maintain **technical depth throughout** without unnecessary diversions or entertainment elements.  
-- Use **clear technical transitions** like "The key architectural consideration..." or "This approach provides..."  
-- Structure content for **quick scanning** by technical readers who want to extract specific information efficiently.  
-- **Eliminate filler content** – every section should provide concrete technical value.  
-
----
-
-## 7. Technical Quality Checklist
-Before publishing, ensure the content:  
-- Demonstrates **deep technical understanding** through specific implementation details and architectural insights.  
-- Provides **actionable guidance** that readers can immediately apply in their technical work.  
-- Includes **complete technical context** (versions, dependencies, prerequisites, limitations).  
-- Avoids **unnecessary simplification** that diminishes technical value.  
-- Stays **within reading time guidelines** (4-8 minutes standard, max 10 minutes for comprehensive guides).  
-
----
-
-## 8. Technical Writing in Action
-> **Instead of:**  
-> "Monitoring disk I/O is crucial for maintaining optimal VM performance."  
->
-> **Write:**  
-> "Monitor disk I/O using `iostat -x 1` to identify when average wait times exceed 10ms, indicating storage subsystem bottlenecks that require immediate investigation."
