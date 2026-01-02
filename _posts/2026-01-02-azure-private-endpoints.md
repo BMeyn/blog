@@ -7,12 +7,13 @@ pin: false
 ---
 
 
-In vielen Azure-Projekten zeigt sich ein wiederkehrendes Muster: Die Infrastruktur ist sorgfältig geplant, Private Endpoints sind konfiguriert, Network Security Groups sind gesetzt, und das Routing scheint perfekt. Doch sobald die ersten Anwendungen darauf zugreifen sollen, beginnt das große Rätselraten. Verbindungen schlagen fehl, Timeouts häufen sich, und die Fehlersuche führt oft in die falsche Richtung – zu Firewalls, NSGs oder Peering-Konfigurationen. Dabei liegt das eigentliche Problem meist eine Ebene höher: bei der DNS-Auflösung.
+Die Infrastruktur ist perfekt konfiguriert. Private Endpoints sind deployed, NSGs sind gesetzt, das Routing funktioniert. Trotzdem schlagen alle Verbindungen fehl. Das Team verbringt Stunden mit Troubleshooting – Firewall-Logs, Route Tables, Peering-Konfiguration. Alles sieht korrekt aus.
 
-Private Endpoints sind ein zentraler Baustein für sichere Cloud-Architekturen. Sie ermöglichen es, Azure-Services wie Storage Accounts, SQL-Datenbanken oder Key Vaults vollständig vom öffentlichen Internet abzuschotten und nur über private IP-Adressen im eigenen Virtual Network erreichbar zu machen. Doch diese Sicherheitsschicht funktioniert nur dann zuverlässig, wenn die DNS-Infrastruktur konsequent mitgedacht wird.
+Bis jemand ein simples `nslookup` ausführt. Und plötzlich wird klar: Das Problem liegt nicht im Netzwerk. Es liegt bei DNS.
 
-Dieser Artikel zeigt, warum DNS bei Private Endpoints so oft zur Stolperfalle wird und wie sich die Integration robust gestalten lässt.
+Private Endpoints sind ein zentraler Baustein für sichere Cloud-Architekturen. Sie schotten Azure-Services vom öffentlichen Internet ab und machen sie nur über private IPs erreichbar. Doch diese Sicherheitsschicht funktioniert nur, wenn die DNS-Infrastruktur konsequent mitgedacht wird – und genau das wird oft übersehen.
 
+Dieser Artikel zeigt, warum DNS bei Private Endpoints zur Stolperfalle wird und wie sich die Integration robust gestalten lässt.
 > **Die wichtigsten Erkenntnisse auf einen Blick**:
 
 - Private Endpoints funktionieren nur mit korrekter DNS-Integration – ohne Private DNS Zones lösen FQDNs weiterhin zu öffentlichen IPs auf

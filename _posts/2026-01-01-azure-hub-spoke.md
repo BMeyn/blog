@@ -6,13 +6,11 @@ tags: [azure, networking, infrastructure-as-code, architecture]
 pin: false
 ---
 
-In fast jedem Enterprise-Projekt mit Azure taucht früher oder später die Frage auf: **Wie strukturieren wir unsere Netzwerk-Architektur so, dass sie skaliert, sicher ist und gleichzeitig wartbar bleibt?**
+Die Netzwerk-Architektur ist sorgfältig geplant. Jedes Team hat sein eigenes VNet, alle haben ihre eigenen Firewalls, DNS-Server, VPN-Gateways. Auf dem Papier sieht alles sauber aus. Doch nach sechs Monaten wird klar: Die Kosten explodieren. Troubleshooting dauert Stunden, weil jede Umgebung anders konfiguriert ist. Neue Teams brauchen Wochen, um ihre Netzwerk-Infrastruktur aufzusetzen.
 
-Die Antwort, die sich in der Praxis immer wieder bewährt hat, ist simpel: **Hub-and-Spoke**.
+Die Lösung ist weder neu noch fancy – aber bewährt: **Hub-and-Spoke**. Ein zentrales VNet für Shared Services, isolierte Spokes für Workloads. Simpel, skalierbar, wartbar.
 
-Dieses Architekturmuster ist kein neuer Trend. Es existiert seit Jahren und wird von Microsoft selbst als Best Practice empfohlen. Trotzdem sehe ich regelmäßig Teams, die entweder mit Flat Networks oder chaotischen Mesh-Strukturen kämpfen – bis sie umdenken.
-
-In diesem Artikel erkläre ich, warum Hub-and-Spoke in Azure-Umgebungen so gut funktioniert, wie man es technisch umsetzt und welche Stolpersteine es in der Praxis gibt.
+Trotzdem sehe ich regelmäßig Teams, die mit Flat Networks oder chaotischen Mesh-Strukturen kämpfen – bis der Schmerz groß genug ist, um umzudenken. Dieser Artikel zeigt, warum Hub-and-Spoke funktioniert, wie man es technisch umsetzt und welche Stolpersteine es gibt.
 
 <aside>
 💡

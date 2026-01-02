@@ -6,11 +6,11 @@ tags: [azure, databricks, dataops, ci/cd, testing, infrastructure-as-code]
 pin: false
 ---
 
-In vielen Enterprise-Projekten zeigt sich ein wiederkehrendes Muster: Data Platforms werden mit viel Aufwand aufgebaut, aber nach wenigen Monaten häufen sich Incidents, Daten-Qualitätsprobleme und manuelle Eingriffe.
+Vier von fünf Data-Platform-Projekten, die ich in den letzten Jahren gesehen habe, scheitern nicht an der Technologie. Sie scheitern an fehlenden Engineering-Standards.
 
-Der Grund ist selten die Technologie selbst. **Das eigentliche Problem: Fehlende DataOps-Praktiken.**
+Teams investieren Monate in die Architektur, wählen sorgfältig ihre Tools aus, bauen beeindruckende Prototypen. Doch sobald die Platform in Production geht, beginnt das Chaos: Pipeline-Änderungen werden direkt deployed, ohne Tests. Schema-Änderungen brechen nachgelagerte Systeme. Incidents werden durch manuelle Fixes gelöst, die nie im Code landen.
 
-Während Software-Engineering-Teams seit Jahren auf CI/CD, automatisierte Tests und Infrastructure as Code setzen, arbeiten viele Data Teams noch mit manuellen Deployments, ungetesteten Pipelines und undokumentierten Abhängigkeiten.
+Während Software-Engineering-Teams seit Jahren auf CI/CD, automatisierte Tests und Infrastructure as Code setzen, arbeiten viele Data Teams noch wie vor zehn Jahren. **Das eigentliche Problem: Fehlende DataOps-Praktiken.**
 
 Dieser Artikel beleuchtet, was DataOps im Kontext von Azure und Databricks konkret bedeutet – und welche Engineering-Standards den Unterschied zwischen einer fragilen und einer robusten Data Platform ausmachen.
 
