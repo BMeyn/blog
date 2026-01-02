@@ -15,29 +15,10 @@ Dieses Architekturmuster ist kein neuer Trend. Es existiert seit Jahren und wird
 
 In diesem Artikel erkläre ich, warum Hub-and-Spoke in Azure-Umgebungen so gut funktioniert, wie man es technisch umsetzt und welche Stolpersteine es in der Praxis gibt.
 
-## Prompts
 
-<!-- markdownlint-capture -->
-<!-- markdownlint-disable -->
-> An example showing the `tip` type prompt.
+> **Zentrale Idee**: Hub-and-Spoke trennt zentrale Shared Services (Hub) von isolierten Workloads (Spokes). Das schafft Kontrolle, Skalierbarkeit und Sicherheit – ohne Komplexität.
 {: .prompt-tip }
 
-> An example showing the `info` type prompt.
-{: .prompt-info }
-
-> An example showing the `warning` type prompt.
-{: .prompt-warning }
-
-> An example showing the `danger` type prompt.
-{: .prompt-danger }
-
-<!-- markdownlint-restore -->
-
-> `Zentrale Idee`: Hub-and-Spoke trennt zentrale Shared Services (Hub) von isolierten Workloads (Spokes). Das schafft Kontrolle, Skalierbarkeit und Sicherheit – ohne Komplexität.
-{: .prompt-tip }
-
-
-**PROMPT:** Create a professional technical diagram showing Azure Hub-and-Spoke network architecture. Show one central hub VNet in the middle containing icons for Azure Firewall, Private DNS Zones, VPN Gateway, and Azure Bastion. Around the hub, show 3-4 spoke VNets connected via VNet Peering (represented by bidirectional arrows). Each spoke should contain different workload icons (Databricks, AKS, VMs, Storage). Use Azure's blue color scheme. Add labels in German. Make it clean, modern, and suitable for a technical blog post. Style: flat design, professional diagram.
 
 ## Das Problem: Flat Networks skalieren nicht
 
@@ -53,7 +34,7 @@ Viele Azure-Setups starten mit einem einzelnen VNet. Das ist völlig in Ordnung 
 Ein weiteres Problem: **Flat Networks bieten keine klare Separation**. Wenn alle Workloads im selben VNet liegen, ist es schwer, Blast-Radius zu kontrollieren oder unterschiedliche Security-Level zu enforcing.
 
 
-> `Häufiger Stolperstein`: Teams versuchen, Isolation durch immer mehr NSG-Regeln zu erreichen. Das endet in unübersichtlichen, fehleranfälligen Konfigurationen.
+> **Häufiger Stolperstein**: Teams versuchen, Isolation durch immer mehr NSG-Regeln zu erreichen. Das endet in unübersichtlichen, fehleranfälligen Konfigurationen.
 {: .prompt-warning }
 
 ## Hub-and-Spoke: Das Konzept
@@ -127,9 +108,6 @@ resource "azurerm_virtual_network_peering" "spoke_to_hub" {
 {: .prompt-warning }
 
 
-
-**PROMPT:** Create a technical diagram illustrating VNet Peering non-transitivity in Azure. Show three VNets: Hub (center), Spoke A (left), and Spoke B (right). Draw green bidirectional arrows between Hub-Spoke A and Hub-Spoke B labeled "VNet Peering ✓". Draw a red crossed-out line between Spoke A and Spoke B labeled "Keine direkte Verbindung ✗". Add a blue arrow showing traffic flow from Spoke A → Hub → Spoke B with "Traffic via Firewall" label. Use Azure color scheme, clean flat design, suitable for technical documentation in German.
-
 ### Routing über Azure Firewall
 
 Damit Spokes über den Hub kommunizieren können, braucht es **User Defined Routes (UDRs)**.
@@ -160,7 +138,6 @@ resource "azurerm_route_table" "spoke" {
 >**Pro-Tipp**: Nutze Azure Firewall Manager, um Firewall Policies zentral zu verwalten und auf mehrere Firewall-Instanzen zu verteilen (z. B. in Multi-Region-Setups).
 {: .prompt-tip }
 
-**PROMPT:** Create a technical diagram showing User Defined Routes (UDR) and Azure Firewall routing in Hub-and-Spoke. Show a Spoke VNet with a Route Table attached, containing a default route "0.0.0.0/0 → Azure Firewall IP". Show traffic flowing from a VM in the Spoke through the Route Table, then to Azure Firewall in the Hub VNet, then either to another Spoke or to the Internet. Use arrows to indicate traffic flow, label each component clearly in German. Azure blue color scheme, clean professional style, flat design.
 
 ## DNS: Private DNS Zones im Hub
 
@@ -194,7 +171,6 @@ Ohne diese Konfiguration bekommen Spokes die **öffentliche IP** von PaaS-Servic
 >**Stolperstein**: Wenn Private DNS Zones fehlen oder nicht korrekt verlinkt sind, greifen Ressourcen im Spoke auf öffentliche Endpoints zu – auch wenn Private Endpoints provisioniert wurden. Das ist schwer zu debuggen.
 {: .prompt-warning }
 
-**PROMPT:** Create a split comparison diagram showing Private DNS resolution in Azure Hub-and-Spoke. Left side (correct setup, green): Show Hub VNet with Private DNS Zone ([privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)), connected via Virtual Network Link to Spoke VNet. Spoke resolves [storage.blob.core.windows.net](https://storage.blob.core.windows.net) to private IP 10.x.x.x via Private Endpoint. Right side (incorrect setup, red): Show Spoke without DNS link, resolving to public IP. Use German labels "Korrekt ✓" and "Fehler ✗". Azure colors, clean technical diagram style.
 
 ## Subnet-Sizing: Klein und fokussiert
 
@@ -323,7 +299,6 @@ Ein typisches Szenario: Ein Unternehmen möchte eine **Databricks Lakehouse Plat
 
 </aside>
 
-**PROMPT:** Create a detailed architecture diagram of a Databricks Data Platform in Azure Hub-and-Spoke setup. Show Hub VNet containing Azure Firewall, Private DNS Zones, and ExpressRoute Gateway. Show Spoke VNet (Data Platform) containing Databricks Workspace with VNet Injection, Azure Storage with Private Endpoint, Key Vault with Private Endpoint, Event Hubs, and a Route Table directing traffic to the Firewall. Show data flow arrows from on-premises through ExpressRoute to Hub to Spoke. Label all components in German. Use Azure official colors and icons, professional technical diagram style.
 
 ## Alternativen: Wann Hub-and-Spoke nicht passt
 
