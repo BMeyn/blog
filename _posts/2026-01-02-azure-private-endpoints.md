@@ -26,10 +26,6 @@ Dieser Artikel zeigt, warum DNS bei Private Endpoints so oft zur Stolperfalle wi
 
 ### DNS löst zur falschen IP-Adresse auf
 
-[Create a technical diagram showing the Private Endpoint DNS problem. Split the image into two scenarios side by side. Left side "WITHOUT Private DNS Zone": Show a VM trying to connect to "[mystorageaccount.blob.core.windows.net](https://mystorageaccount.blob.core.windows.net)", DNS resolves to a public IP (red X, connection blocked). Right side "WITH Private DNS Zone": Same VM, DNS resolves to private IP 10.0.1.4 (green checkmark, connection succeeds). Use Azure-style icons and a clean, professional color scheme with blues, greens, and reds. Include small DNS query arrows and IP addresses clearly labeled.]
-
-![A2091104-55C3-4653-9652-5E2B7B7CE681.png](attachment:ccba67f2-c722-472a-b137-dbe54b42b9de:A2091104-55C3-4653-9652-5E2B7B7CE681.png)
-
 Ein Private Endpoint erstellt eine private Netzwerkschnittstelle im Virtual Network und weist dieser eine IP-Adresse aus dem Subnetz-Adressraum zu. Soweit die Theorie. Was dabei häufig übersehen wird: Diese private IP-Adresse wird nirgendwo automatisch registriert. Der FQDN des Azure-Service – etwa [`mystorageaccount.blob.core.windows.net`](https://mystorageaccount.blob.core.windows.net) – löst weiterhin zur öffentlichen IP-Adresse auf, solange keine zusätzliche Konfiguration erfolgt.
 
 > **Die Paradoxe Situation**: Der Private Endpoint existiert, die private IP ist erreichbar, aber die Anwendung versucht, über die öffentliche IP-Adresse zu verbinden. Wenn dann der Public Endpoint deaktiviert wird, läuft jede Verbindung ins Leere. Das Resultat: kompletter Ausfall.
@@ -111,10 +107,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "spoke" {
 
 ### Zentralisierte Private DNS Zones
 
-[Create an Azure architecture diagram showing a hub-and-spoke network topology. Center: "Connectivity Subscription" with a collection of Private DNS Zones (show 4-5 zone icons). Around it: 3 spoke VNets in different subscriptions (Dev, Test, Prod) all connected to the central DNS zones with linking arrows. Use Azure-style icons and a professional color scheme. Include small labels for "VNet Links" on the connection arrows. Clean, isometric perspective with flat design elements.
-
-![ACC97135-0326-4E66-A21A-78CC81E4DFBC.png](attachment:f25a8798-daa8-46eb-8ee2-c83b3c555e55:ACC97135-0326-4E66-A21A-78CC81E4DFBC.png)
-
 In Enterprise-Umgebungen hat sich ein zentralisiertes Modell bewährt: Alle Private DNS Zones werden in einer dedizierten Subscription (z. B. "Connectivity" oder "Shared Services") verwaltet. Von dort aus werden sie mit allen relevanten VNets verknüpft.
 
 > **Vorteile der Zentralisierung**:
@@ -171,8 +163,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "links" {
 ```
 
 ### Conditional Forwarding vs. Private DNS Resolver
-
-[Create a comparison diagram showing two hybrid DNS integration approaches. Top half "Traditional Conditional Forwarding": Show on-premises DNS servers (3 servers, each with individual config icons) pointing to Azure DNS 168.63.129.16, with red warning symbols showing complexity. Bottom half "Private DNS Resolver": Show on-premises DNS servers pointing to a single Private DNS Resolver in Hub VNet, which then connects to Private DNS Zones, with green checkmarks showing simplicity. Use clear labels and a professional Azure color scheme. Include VPN/ExpressRoute connection icons.]
 
 Sobald On-Premises-Systeme oder externe Netzwerke auf die Private Endpoints zugreifen sollen, wird es komplizierter. Die klassische Lösung besteht darin, Conditional Forwarder auf den On-Premises-DNS-Servern einzurichten. Diese leiten Anfragen für `privatelink.\*`-Zonen an die Azure DNS IP-Adresse (`168.63.129.16`) weiter.
 
