@@ -26,11 +26,11 @@ Dieser Artikel zeigt, warum DNS bei Private Endpoints so oft zur Stolperfalle wi
 
 ### DNS löst zur falschen IP-Adresse auf
 
-[Create a technical diagram showing the Private Endpoint DNS problem. Split the image into two scenarios side by side. Left side "WITHOUT Private DNS Zone": Show a VM trying to connect to "[mystorageaccount.blob.core.windows.net](http://mystorageaccount.blob.core.windows.net)", DNS resolves to a public IP (red X, connection blocked). Right side "WITH Private DNS Zone": Same VM, DNS resolves to private IP 10.0.1.4 (green checkmark, connection succeeds). Use Azure-style icons and a clean, professional color scheme with blues, greens, and reds. Include small DNS query arrows and IP addresses clearly labeled.]
+[Create a technical diagram showing the Private Endpoint DNS problem. Split the image into two scenarios side by side. Left side "WITHOUT Private DNS Zone": Show a VM trying to connect to "[mystorageaccount.blob.core.windows.net](https://mystorageaccount.blob.core.windows.net)", DNS resolves to a public IP (red X, connection blocked). Right side "WITH Private DNS Zone": Same VM, DNS resolves to private IP 10.0.1.4 (green checkmark, connection succeeds). Use Azure-style icons and a clean, professional color scheme with blues, greens, and reds. Include small DNS query arrows and IP addresses clearly labeled.]
 
 ![A2091104-55C3-4653-9652-5E2B7B7CE681.png](attachment:ccba67f2-c722-472a-b137-dbe54b42b9de:A2091104-55C3-4653-9652-5E2B7B7CE681.png)
 
-Ein Private Endpoint erstellt eine private Netzwerkschnittstelle im Virtual Network und weist dieser eine IP-Adresse aus dem Subnetz-Adressraum zu. Soweit die Theorie. Was dabei häufig übersehen wird: Diese private IP-Adresse wird nirgendwo automatisch registriert. Der FQDN des Azure-Service – etwa [`mystorageaccount.blob.core.windows.net`](http://mystorageaccount.blob.core.windows.net) – löst weiterhin zur öffentlichen IP-Adresse auf, solange keine zusätzliche Konfiguration erfolgt.
+Ein Private Endpoint erstellt eine private Netzwerkschnittstelle im Virtual Network und weist dieser eine IP-Adresse aus dem Subnetz-Adressraum zu. Soweit die Theorie. Was dabei häufig übersehen wird: Diese private IP-Adresse wird nirgendwo automatisch registriert. Der FQDN des Azure-Service – etwa [`mystorageaccount.blob.core.windows.net`](https://mystorageaccount.blob.core.windows.net) – löst weiterhin zur öffentlichen IP-Adresse auf, solange keine zusätzliche Konfiguration erfolgt.
 
 > **Die Paradoxe Situation**: Der Private Endpoint existiert, die private IP ist erreichbar, aber die Anwendung versucht, über die öffentliche IP-Adresse zu verbinden. Wenn dann der Public Endpoint deaktiviert wird, läuft jede Verbindung ins Leere. Das Resultat: kompletter Ausfall.
 {: .prompt-danger }
@@ -59,12 +59,12 @@ Azure bietet mit **Private DNS Zones** eine zentrale Lösung für dieses Problem
 
 Für jeden Azure-Service-Typ gibt es eine dedizierte Zone:
 
-- **Storage Blobs**: [`privatelink.blob.core.windows.net`](http://privatelink.blob.core.windows.net)
-- **Azure SQL**: [`privatelink.database.windows.net`](http://privatelink.database.windows.net)
-- **Key Vault**: [`privatelink.vaultcore.azure.net`](http://privatelink.vaultcore.azure.net)
-- **Databricks**: [`privatelink.azuredatabricks.net`](http://privatelink.azuredatabricks.net)
-- **Azure Files**: [`privatelink.file.core.windows.net`](http://privatelink.file.core.windows.net)
-- **Cosmos DB**: [`privatelink.documents.azure.com`](http://privatelink.documents.azure.com)
+- **Storage Blobs**: [`privatelink.blob.core.windows.net`](https://privatelink.blob.core.windows.net)
+- **Azure SQL**: [`privatelink.database.windows.net`](https://privatelink.database.windows.net)
+- **Key Vault**: [`privatelink.vaultcore.azure.net`](https://privatelink.vaultcore.azure.net)
+- **Databricks**: [`privatelink.azuredatabricks.net`](https://privatelink.azuredatabricks.net)
+- **Azure Files**: [`privatelink.file.core.windows.net`](https://privatelink.file.core.windows.net)
+- **Cosmos DB**: [`privatelink.documents.azure.com`](https://privatelink.documents.azure.com)
 
 > **Achtung:** Die Benennung folgt einem strikten Schema. Abweichungen führen dazu, dass die DNS-Auflösung nicht funktioniert. Microsoft dokumentiert die korrekten Namen für jeden Service in der offiziellen Dokumentation.
 {: .prompt-warning }
@@ -84,25 +84,25 @@ Ohne diese Verknüpfungen funktioniert die DNS-Auflösung nur teilweise. In grö
 ```hcl
 # Terraform-Beispiel: Private DNS Zone mit VNet-Verknüpfung
 resource "azurerm_private_dns_zone" "blob" {
-  name                = "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)"
-  resource_group_name = azurerm_resource_[group.connectivity.name](http://group.connectivity.name)
+  name                = "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)"
+  resource_group_name = azurerm_resource_[group.connectivity.name](https://group.connectivity.name)
 }
 
 # Verknüpfung mit Hub-VNet
 resource "azurerm_private_dns_zone_virtual_network_link" "hub" {
   name                  = "link-to-hub-vnet"
-  resource_group_name   = azurerm_resource_[group.connectivity.name](http://group.connectivity.name)
-  private_dns_zone_name = azurerm_private_dns_[zone.blob.name](http://zone.blob.name)
-  virtual_network_id    = azurerm_virtual_[network.hub.id](http://network.hub.id)
+  resource_group_name   = azurerm_resource_[group.connectivity.name](https://group.connectivity.name)
+  private_dns_zone_name = azurerm_private_dns_[zone.blob.name](https://zone.blob.name)
+  virtual_network_id    = azurerm_virtual_[network.hub.id](https://network.hub.id)
   registration_enabled  = false
 }
 
 # Verknüpfung mit Spoke-VNet
 resource "azurerm_private_dns_zone_virtual_network_link" "spoke" {
   name                  = "link-to-spoke-vnet"
-  resource_group_name   = azurerm_resource_[group.connectivity.name](http://group.connectivity.name)
-  private_dns_zone_name = azurerm_private_dns_[zone.blob.name](http://zone.blob.name)
-  virtual_network_id    = azurerm_virtual_[network.spoke.id](http://network.spoke.id)
+  resource_group_name   = azurerm_resource_[group.connectivity.name](https://group.connectivity.name)
+  private_dns_zone_name = azurerm_private_dns_[zone.blob.name](https://zone.blob.name)
+  virtual_network_id    = azurerm_virtual_[network.spoke.id](https://network.spoke.id)
   registration_enabled  = false
 }
 ```
@@ -131,15 +131,15 @@ Die Herausforderung liegt in der Automatisierung: Neue VNets müssen automatisch
 # Terraform-Beispiel: Alle gängigen Private DNS Zones zentral erstellen
 locals {
   private_dns_zones = [
-    "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)",
-    "[privatelink.file.core.windows.net](http://privatelink.file.core.windows.net)",
-    "[privatelink.queue.core.windows.net](http://privatelink.queue.core.windows.net)",
-    "[privatelink.table.core.windows.net](http://privatelink.table.core.windows.net)",
-    "[privatelink.database.windows.net](http://privatelink.database.windows.net)",
-    "[privatelink.vaultcore.azure.net](http://privatelink.vaultcore.azure.net)",
-    "[privatelink.azuredatabricks.net](http://privatelink.azuredatabricks.net)",
-    "[privatelink.sql.azuresynapse.net](http://privatelink.sql.azuresynapse.net)",
-    "[privatelink.documents.azure.com](http://privatelink.documents.azure.com)"
+    "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)",
+    "[privatelink.file.core.windows.net](https://privatelink.file.core.windows.net)",
+    "[privatelink.queue.core.windows.net](https://privatelink.queue.core.windows.net)",
+    "[privatelink.table.core.windows.net](https://privatelink.table.core.windows.net)",
+    "[privatelink.database.windows.net](https://privatelink.database.windows.net)",
+    "[privatelink.vaultcore.azure.net](https://privatelink.vaultcore.azure.net)",
+    "[privatelink.azuredatabricks.net](https://privatelink.azuredatabricks.net)",
+    "[privatelink.sql.azuresynapse.net](https://privatelink.sql.azuresynapse.net)",
+    "[privatelink.documents.azure.com](https://privatelink.documents.azure.com)"
   ]
 }
 
@@ -147,7 +147,7 @@ resource "azurerm_private_dns_zone" "zones" {
   for_each = toset(local.private_dns_zones)
   
   name                = each.value
-  resource_group_name = azurerm_resource_[group.connectivity.name](http://group.connectivity.name)
+  resource_group_name = azurerm_resource_[group.connectivity.name](https://group.connectivity.name)
   
   tags = local.common_tags
 }
@@ -163,8 +163,8 @@ resource "azurerm_private_dns_zone_virtual_network_link" "links" {
   }
   
   name                  = "link-${each.value.vnet_id}"
-  resource_group_name   = azurerm_resource_[group.connectivity.name](http://group.connectivity.name)
-  private_dns_zone_name = [each.value.zone](http://each.value.zone)
+  resource_group_name   = azurerm_resource_[group.connectivity.name](https://group.connectivity.name)
+  private_dns_zone_name = [each.value.zone](https://each.value.zone)
   virtual_network_id    = each.value.vnet_id
   registration_enabled  = false
 }
@@ -190,34 +190,34 @@ Das funktioniert, hat aber Nachteile:
 # Terraform-Beispiel: Private DNS Resolver
 resource "azurerm_private_dns_resolver" "hub" {
   name                = "hub-dns-resolver"
-  resource_group_name = azurerm_resource_[group.connectivity.name](http://group.connectivity.name)
+  resource_group_name = azurerm_resource_[group.connectivity.name](https://group.connectivity.name)
   location            = azurerm_resource_group.connectivity.location
-  virtual_network_id  = azurerm_virtual_[network.hub.id](http://network.hub.id)
+  virtual_network_id  = azurerm_virtual_[network.hub.id](https://network.hub.id)
 }
 
 # Inbound Endpoint für Anfragen aus On-Premises
 resource "azurerm_private_dns_resolver_inbound_endpoint" "hub" {
   name                    = "inbound-endpoint"
-  private_dns_resolver_id = azurerm_private_dns_[resolver.hub.id](http://resolver.hub.id)
+  private_dns_resolver_id = azurerm_private_dns_[resolver.hub.id](https://resolver.hub.id)
   location                = azurerm_resource_group.connectivity.location
   
   ip_configurations {
-    subnet_id = azurerm_subnet.dns_resolver_[inbound.id](http://inbound.id)
+    subnet_id = azurerm_subnet.dns_resolver_[inbound.id](https://inbound.id)
   }
 }
 
 # Dediziertes Subnetz für den Resolver (mind. /28)
 resource "azurerm_subnet" "dns_resolver_inbound" {
   name                 = "snet-dns-resolver-inbound"
-  resource_group_name  = azurerm_resource_[group.connectivity.name](http://group.connectivity.name)
-  virtual_network_name = azurerm_virtual_[network.hub.name](http://network.hub.name)
+  resource_group_name  = azurerm_resource_[group.connectivity.name](https://group.connectivity.name)
+  virtual_network_name = azurerm_virtual_[network.hub.name](https://network.hub.name)
   address_prefixes     = ["10.0.4.0/28"]
   
   delegation {
-    name = "[Microsoft.Network](http://Microsoft.Network).dnsResolvers"
+    name = "[Microsoft.Network](https://Microsoft.Network).dnsResolvers"
     service_delegation {
-      actions = ["[Microsoft.Network/virtualNetworks/subnets/join/action](http://Microsoft.Network/virtualNetworks/subnets/join/action)"]
-      name    = "[Microsoft.Network/dnsResolvers](http://Microsoft.Network/dnsResolvers)"
+      actions = ["[Microsoft.Network/virtualNetworks/subnets/join/action](https://Microsoft.Network/virtualNetworks/subnets/join/action)"]
+      name    = "[Microsoft.Network/dnsResolvers](https://Microsoft.Network/dnsResolvers)"
     }
   }
 }
@@ -280,8 +280,8 @@ Eine Möglichkeit besteht darin, mit Traffic Manager oder Front Door zu arbeiten
 
 Für Storage Accounts mit Read-Access Geo-Redundant Storage (RA-GRS) müssen separate DNS-Einträge für die sekundäre Region konfiguriert werden:
 
-- Primary: [`storageaccount.blob.core.windows.net`](http://storageaccount.blob.core.windows.net)
-- Secondary: [`storageaccount-secondary.blob.core.windows.net`](http://storageaccount-secondary.blob.core.windows.net)
+- Primary: [`storageaccount.blob.core.windows.net`](https://storageaccount.blob.core.windows.net)
+- Secondary: [`storageaccount-secondary.blob.core.windows.net`](https://storageaccount-secondary.blob.core.windows.net)
 
 ### Kosten
 
