@@ -127,10 +127,9 @@ In Hub-and-Spoke-Szenarien empfiehlt sich folgendes Setup:
 
 Typische Private DNS Zones:
 
-
-- [`privatelink.blob.core.windows.net`](http://privatelink.blob.core.windows.net) (Azure Storage Blobs)
-- [`privatelink.vaultcore.azure.net`](http://privatelink.vaultcore.azure.net) (Key Vault)
-- [`privatelink.azuredatabricks.net`](http://privatelink.azuredatabricks.net) (Databricks)
+- [`privatelink.blob.core.windows.net`](https://privatelink.blob.core.windows.net) (Azure Storage Blobs)
+- [`privatelink.vaultcore.azure.net`](https://privatelink.vaultcore.azure.net) (Key Vault)
+- [`privatelink.azuredatabricks.net`](https://privatelink.azuredatabricks.net) (Databricks)
 
 Ohne diese Konfiguration bekommen Spokes die **öffentliche IP** von PaaS-Services aufgelöst – selbst wenn Private Endpoints existieren. Das führt zu Connectivity-Problemen und oft zu stundenlangem Troubleshooting.
 
