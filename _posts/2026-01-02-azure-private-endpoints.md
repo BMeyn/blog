@@ -70,10 +70,6 @@ Der **Azure Private DNS Resolver** ist ein vollständig verwalteter Service, der
 
 Die empfohlene Architektur folgt dem Hub-and-Spoke-Modell mit zentralisierter DNS-Verwaltung:
 
-![IMG_5119.png](attachment:0efd28d9-7bfc-448c-b68e-d7ae82a3e0ff:IMG_5119.png)
-
-![ACC97135-0326-4E66-A21A-78CC81E4DFBC.png](attachment:f25a8798-daa8-46eb-8ee2-c83b3c555e55:ACC97135-0326-4E66-A21A-78CC81E4DFBC.png)
-
 **Komponenten**:
 
 **Connectivity Hub Subscription**:
@@ -121,20 +117,20 @@ Der Private DNS Resolver benötigt ein dediziertes Subnet mit Delegation. Mindes
 resource "azurerm_virtual_network" "hub" {
   name                = "vnet-hub-we"
   location            = "westeurope"
-  resource_group_name = azurerm_resource_group.connectivity_[hub.name](http://hub.name)
+  resource_group_name = azurerm_resource_group.connectivity_[hub.name](https://hub.name)
   address_space       = ["10.0.0.0/16"]
 }
 
 resource "azurerm_subnet" "dns_resolver" {
   name                 = "snet-dns-resolver"
-  resource_group_name  = azurerm_resource_group.connectivity_[hub.name](http://hub.name)
-  virtual_network_name = azurerm_virtual_[network.hub.name](http://network.hub.name)
+  resource_group_name  = azurerm_resource_group.connectivity_[hub.name](https://hub.name)
+  virtual_network_name = azurerm_virtual_[network.hub.name](https://network.hub.name)
   address_prefixes     = ["10.0.1.0/28"]
 
   delegation {
-    name = "[Microsoft.Network](http://Microsoft.Network).dnsResolvers"
+    name = "[Microsoft.Network](https://Microsoft.Network).dnsResolvers"
     service_delegation {
-      name = "[Microsoft.Network/dnsResolvers](http://Microsoft.Network/dnsResolvers)"
+      name = "[Microsoft.Network/dnsResolvers](https://Microsoft.Network/dnsResolvers)"
     }
   }
 }
@@ -149,32 +145,32 @@ Erstellen Sie alle benötigten Private DNS Zones zentral im Connectivity Hub.
 ```hcl
 locals {
   private_dns_zones = [
-    "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)",
-    "[privatelink.file.core.windows.net](http://privatelink.file.core.windows.net)",
-    "[privatelink.dfs.core.windows.net](http://privatelink.dfs.core.windows.net)",
-    "[privatelink.database.windows.net](http://privatelink.database.windows.net)",
-    "[privatelink.sql.azuresynapse.net](http://privatelink.sql.azuresynapse.net)",
-    "[privatelink.vaultcore.azure.net](http://privatelink.vaultcore.azure.net)",
-    "[privatelink.azuredatabricks.net](http://privatelink.azuredatabricks.net)",
-    "[privatelink.azurecr.io](http://privatelink.azurecr.io)",
-    "[privatelink.azurewebsites.net](http://privatelink.azurewebsites.net)",
-    "[privatelink.postgres.database.azure.com](http://privatelink.postgres.database.azure.com)",
-    "[privatelink.redis.cache.windows.net](http://privatelink.redis.cache.windows.net)",
+    "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)",
+    "[privatelink.file.core.windows.net](https://privatelink.file.core.windows.net)",
+    "[privatelink.dfs.core.windows.net](https://privatelink.dfs.core.windows.net)",
+    "[privatelink.database.windows.net](https://privatelink.database.windows.net)",
+    "[privatelink.sql.azuresynapse.net](https://privatelink.sql.azuresynapse.net)",
+    "[privatelink.vaultcore.azure.net](https://privatelink.vaultcore.azure.net)",
+    "[privatelink.azuredatabricks.net](https://privatelink.azuredatabricks.net)",
+    "[privatelink.azurecr.io](https://privatelink.azurecr.io)",
+    "[privatelink.azurewebsites.net](https://privatelink.azurewebsites.net)",
+    "[privatelink.postgres.database.azure.com](https://privatelink.postgres.database.azure.com)",
+    "[privatelink.redis.cache.windows.net](https://privatelink.redis.cache.windows.net)",
   ]
 }
 
 resource "azurerm_private_dns_zone" "zones" {
   for_each            = toset(local.private_dns_zones)
   name                = each.value
-  resource_group_name = azurerm_resource_group.connectivity_[hub.name](http://hub.name)
+  resource_group_name = azurerm_resource_group.connectivity_[hub.name](https://hub.name)
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "hub" {
   for_each              = azurerm_private_dns_zone.zones
   name                  = "link-hub"
-  resource_group_name   = azurerm_resource_group.connectivity_[hub.name](http://hub.name)
-  private_dns_zone_name = [each.value.name](http://each.value.name)
-  virtual_network_id    = azurerm_virtual_[network.hub.id](http://network.hub.id)
+  resource_group_name   = azurerm_resource_group.connectivity_[hub.name](https://hub.name)
+  private_dns_zone_name = [each.value.name](https://each.value.name)
+  virtual_network_id    = azurerm_virtual_[network.hub.id](https://network.hub.id)
 }
 ```
 
@@ -186,19 +182,19 @@ resource "azurerm_private_dns_zone_virtual_network_link" "hub" {
 ```hcl
 resource "azurerm_private_dns_resolver" "hub" {
   name                = "pdns-resolver-hub"
-  resource_group_name = azurerm_resource_group.connectivity_[hub.name](http://hub.name)
+  resource_group_name = azurerm_resource_group.connectivity_[hub.name](https://hub.name)
   location            = azurerm_resource_group.connectivity_hub.location
-  virtual_network_id  = azurerm_virtual_[network.hub.id](http://network.hub.id)
+  virtual_network_id  = azurerm_virtual_[network.hub.id](https://network.hub.id)
 }
 
 resource "azurerm_private_dns_resolver_inbound_endpoint" "hub" {
   name                    = "inbound-endpoint"
-  private_dns_resolver_id = azurerm_private_dns_[resolver.hub.id](http://resolver.hub.id)
+  private_dns_resolver_id = azurerm_private_dns_[resolver.hub.id](https://resolver.hub.id)
   location                = azurerm_private_dns_resolver.hub.location
 
   ip_configurations {
     private_ip_allocation_method = "Dynamic"
-    subnet_id                    = azurerm_subnet.dns_[resolver.id](http://resolver.id)
+    subnet_id                    = azurerm_subnet.dns_[resolver.id](https://resolver.id)
   }
 }
 
@@ -219,16 +215,16 @@ Jedes Spoke-VNet benötigt VNet-Peering zum Hub und Verknüpfungen zu allen Priv
 resource "azurerm_virtual_network" "spoke_prod" {
   name                = "vnet-spoke-prod-we"
   location            = "westeurope"
-  resource_group_name = azurerm_resource_[group.prod.name](http://group.prod.name)
+  resource_group_name = azurerm_resource_[group.prod.name](https://group.prod.name)
   address_space       = ["10.10.0.0/16"]
 }
 
 # Hub-to-Spoke Peering
 resource "azurerm_virtual_network_peering" "hub_to_spoke_prod" {
   name                         = "peer-hub-to-prod"
-  resource_group_name          = azurerm_resource_group.connectivity_[hub.name](http://hub.name)
-  virtual_network_name         = azurerm_virtual_[network.hub.name](http://network.hub.name)
-  remote_virtual_network_id    = azurerm_virtual_network.spoke_[prod.id](http://prod.id)
+  resource_group_name          = azurerm_resource_group.connectivity_[hub.name](https://hub.name)
+  virtual_network_name         = azurerm_virtual_[network.hub.name](https://network.hub.name)
+  remote_virtual_network_id    = azurerm_virtual_network.spoke_[prod.id](https://prod.id)
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   allow_gateway_transit        = true
@@ -237,9 +233,9 @@ resource "azurerm_virtual_network_peering" "hub_to_spoke_prod" {
 # Spoke-to-Hub Peering
 resource "azurerm_virtual_network_peering" "spoke_prod_to_hub" {
   name                         = "peer-prod-to-hub"
-  resource_group_name          = azurerm_resource_[group.prod.name](http://group.prod.name)
-  virtual_network_name         = azurerm_virtual_network.spoke_[prod.name](http://prod.name)
-  remote_virtual_network_id    = azurerm_virtual_[network.hub.id](http://network.hub.id)
+  resource_group_name          = azurerm_resource_[group.prod.name](https://group.prod.name)
+  virtual_network_name         = azurerm_virtual_network.spoke_[prod.name](https://prod.name)
+  remote_virtual_network_id    = azurerm_virtual_[network.hub.id](https://network.hub.id)
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   use_remote_gateways          = true
@@ -249,9 +245,9 @@ resource "azurerm_virtual_network_peering" "spoke_prod_to_hub" {
 resource "azurerm_private_dns_zone_virtual_network_link" "spoke_prod" {
   for_each              = azurerm_private_dns_zone.zones
   name                  = "link-spoke-prod"
-  resource_group_name   = azurerm_resource_group.connectivity_[hub.name](http://hub.name)
-  private_dns_zone_name = [each.value.name](http://each.value.name)
-  virtual_network_id    = azurerm_virtual_network.spoke_[prod.id](http://prod.id)
+  resource_group_name   = azurerm_resource_group.connectivity_[hub.name](https://hub.name)
+  private_dns_zone_name = [each.value.name](https://each.value.name)
+  virtual_network_id    = azurerm_virtual_network.spoke_[prod.id](https://prod.id)
 }
 ```
 
@@ -268,12 +264,12 @@ resource "azurerm_private_dns_zone_virtual_network_link" "spoke_prod" {
 $PrivateDnsResolverIP = "10.0.1.4"
 
 $PrivateLinkZones = @(
-    "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)",
-    "[privatelink.file.core.windows.net](http://privatelink.file.core.windows.net)",
-    "[privatelink.dfs.core.windows.net](http://privatelink.dfs.core.windows.net)",
-    "[privatelink.database.windows.net](http://privatelink.database.windows.net)",
-    "[privatelink.vaultcore.azure.net](http://privatelink.vaultcore.azure.net)",
-    "[privatelink.azuredatabricks.net](http://privatelink.azuredatabricks.net)"
+    "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)",
+    "[privatelink.file.core.windows.net](https://privatelink.file.core.windows.net)",
+    "[privatelink.dfs.core.windows.net](https://privatelink.dfs.core.windows.net)",
+    "[privatelink.database.windows.net](https://privatelink.database.windows.net)",
+    "[privatelink.vaultcore.azure.net](https://privatelink.vaultcore.azure.net)",
+    "[privatelink.azuredatabricks.net](https://privatelink.azuredatabricks.net)"
 )
 
 foreach ($Zone in $PrivateLinkZones) {
@@ -288,7 +284,7 @@ foreach ($Zone in $PrivateLinkZones) {
 
 ```bash
 # /etc/bind/named.conf.local
-zone "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)" {
+zone "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)" {
     type forward;
     forward only;
     forwarders { 10.0.1.4; };
@@ -318,7 +314,7 @@ Wenn Private Endpoints mit `private_dns_zone_group` erstellt werden, registriere
 ```hcl
 resource "azurerm_storage_account" "example" {
   name                          = "mystorageaccount"
-  resource_group_name           = azurerm_resource_[group.prod.name](http://group.prod.name)
+  resource_group_name           = azurerm_resource_[group.prod.name](https://group.prod.name)
   location                      = "westeurope"
   account_tier                  = "Standard"
   account_replication_type      = "LRS"
@@ -327,13 +323,13 @@ resource "azurerm_storage_account" "example" {
 
 resource "azurerm_private_endpoint" "storage_blob" {
   name                = "pe-storageaccount-blob"
-  location            = azurerm_resource_[group.prod](http://group.prod).location
-  resource_group_name = azurerm_resource_[group.prod.name](http://group.prod.name)
-  subnet_id           = azurerm_subnet.private_[endpoints.id](http://endpoints.id)
+  location            = azurerm_resource_[group.prod](https://group.prod).location
+  resource_group_name = azurerm_resource_[group.prod.name](https://group.prod.name)
+  subnet_id           = azurerm_subnet.private_[endpoints.id](https://endpoints.id)
 
   private_service_connection {
     name                           = "psc-storageaccount-blob"
-    private_connection_resource_id = azurerm_storage_[account.example.id](http://account.example.id)
+    private_connection_resource_id = azurerm_storage_[account.example.id](https://account.example.id)
     subresource_names              = ["blob"]
     is_manual_connection           = false
   } 
@@ -341,7 +337,7 @@ resource "azurerm_private_endpoint" "storage_blob" {
   private_dns_zone_group {
     name                 = "default"
     private_dns_zone_ids = [
-      azurerm_private_dns_zone.zones["[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)"].id
+      azurerm_private_dns_zone.zones["[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)"].id
     ]
   }
 }
@@ -350,7 +346,7 @@ resource "azurerm_private_endpoint" "storage_blob" {
 **Was passiert**:
 
 1. Private Endpoint erstellt Netzwerkschnittstelle mit IP 10.10.1.5
-2. A-Record wird automatisch in [`privatelink.blob.core.windows.net`](http://privatelink.blob.core.windows.net) erstellt
+2. A-Record wird automatisch in [`privatelink.blob.core.windows.net`](https://privatelink.blob.core.windows.net) erstellt
 3. Sofort auflösbar von allen verknüpften VNets und On-Premises
 
 ### Cross-Subscription Private Endpoints
@@ -359,7 +355,7 @@ Wenn Private Endpoints in Spoke-Subscriptions, aber Private DNS Zones im Connect
 
 ```hcl
 data "azurerm_private_dns_zone" "blob" {
-  name                = "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.net)"
+  name                = "[privatelink.blob.core.windows.net](https://privatelink.blob.core.windows.net)"
   resource_group_name = "rg-connectivity-hub"
   provider            = azurerm.connectivity_hub
 }
@@ -369,7 +365,7 @@ resource "azurerm_private_endpoint" "storage_blob" {
   
   private_dns_zone_group {
     name                 = "default"
-    private_dns_zone_ids = [data.azurerm_private_dns_[zone.blob.id](http://zone.blob.id)]
+    private_dns_zone_ids = [data.azurerm_private_dns_[zone.blob.id](https://zone.blob.id)]
   }
 }
 ```
@@ -412,10 +408,10 @@ Erzwingen Sie DNS-Integration für alle Private Endpoints:
       "allOf": [
         {
           "field": "type",
-          "equals": "[Microsoft.Network/privateEndpoints](http://Microsoft.Network/privateEndpoints)"
+          "equals": "[Microsoft.Network/privateEndpoints](https://Microsoft.Network/privateEndpoints)"
         },
         {
-          "field": "[Microsoft.Network/privateEndpoints/privateDnsZoneGroup](http://Microsoft.Network/privateEndpoints/privateDnsZoneGroup)",
+          "field": "[Microsoft.Network/privateEndpoints/privateDnsZoneGroup](https://Microsoft.Network/privateEndpoints/privateDnsZoneGroup)",
           "exists": "false"
         }
       ]

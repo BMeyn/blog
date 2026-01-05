@@ -8,7 +8,6 @@ image:
 pin: false
 ---
 
-
 Viele Azure-Umgebungen starten organisch: Ein Team erstellt ein VNet für sein Projekt, ein zweites Team macht das Gleiche, ein drittes folgt. Jedes Setup ist leicht unterschiedlich – mal mit Azure Firewall, mal ohne, mal mit Private Endpoints, mal mit öffentlichen Endpoints. Das funktioniert anfangs.
 
 In der Praxis zeigt sich dann ein wiederkehrendes Muster: **Netzwerk-Architektur wird zum Flaschenhals**. Jedes Team hat seine eigene Firewall provisioniert, weil „das halt Best Practice ist". DNS-Auflösung funktioniert in jedem VNet anders. Ein neues Team fragt: „Wie richte ich mein Netzwerk ein?" – und bekommt fünf unterschiedliche Antworten.
