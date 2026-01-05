@@ -3,6 +3,8 @@ title: "Hub-and-Spoke-Netzwerke in Azure: Wie diese Architektur Enterprise-Setup
 date: 2026-01-01 10:00:00 +0000
 categories: [Azure, Architektur]
 tags: [azure, networking, infrastructure-as-code, architecture]
+image:
+  path: /assets/img/posts/dns-resolver-cover.jpeg
 pin: false
 ---
 

@@ -18,6 +18,7 @@ Während Software-Teams seit Jahren auf automatisierte Tests und Infrastructure 
 Dieser Artikel zeigt, was DataOps im Kontext von Azure und Databricks konkret bedeutet – und welche Standards den Unterschied zwischen einer fragilen und einer robusten Data Platform ausmachen.
 
 > **Zentrale Fragen**
+
 - Warum scheitern Data Platforms ohne Engineering-Disziplin?
 - Welche DataOps-Standards funktionieren in Enterprise-Projekten?
 - Wie implementiert man CI/CD und Testing für Databricks konkret?
