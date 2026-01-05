@@ -103,9 +103,48 @@ bash tools/test.sh
 
 This runs comprehensive checks including:
 - Internal link validation
-- HTML structure validation  
+- HTML structure validation
 - Asset reference verification
 - SEO meta tag validation
+
+### ⚡ Git Hooks
+
+This repository includes git hooks that automatically process blog posts when you commit changes.
+
+**Pre-commit Hook**: Automatically runs `translate.py` on staged markdown files in `_posts/` to convert Notion-style callouts to Jekyll-compatible format.
+
+#### Installation
+
+**For DevContainer users**: Hooks are installed automatically when the container is created.
+
+**For manual setup**:
+```bash
+bash scripts/install-hooks.sh
+```
+
+#### How It Works
+
+When you commit markdown files in `_posts/`, the pre-commit hook:
+1. Detects which markdown files are staged
+2. Runs `translate.py` to convert Notion callouts
+3. Re-stages the converted files
+4. Proceeds with the commit
+
+```bash
+# Example workflow
+git add _posts/2026-01-05-my-post.md
+git commit -m "Add new post"
+# Hook runs automatically and processes the file
+```
+
+#### Bypassing Hooks
+
+In rare cases where you need to skip the hook:
+```bash
+git commit --no-verify -m "Skip hooks for this commit"
+```
+
+For more details, see [scripts/hooks/README.md](scripts/hooks/README.md).
 
 ## 📁 Project Structure
 

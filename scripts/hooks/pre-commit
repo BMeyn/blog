@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#
+# Pre-commit hook that automatically runs translate.py on staged markdown files
+# in the _posts/ directory to convert Notion-style callouts to Jekyll format.
+#
+
+set -e  # Exit immediately if a command exits with a non-zero status
+
+# Configuration
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+TRANSLATE_SCRIPT="${REPO_ROOT}/tools/translate.py"
+POSTS_DIR="${REPO_ROOT}/_posts"
+
+# Verify translate.py exists
+if [ ! -f "$TRANSLATE_SCRIPT" ]; then
+    echo "Error: translate.py not found at $TRANSLATE_SCRIPT"
+    echo "Please ensure the script exists before committing."
+    exit 1
+fi
+
+# Get staged markdown files in _posts/
+# --cached: Show only staged changes
+# --name-only: Show only file names
+# --diff-filter=ACM: Only show Added, Copied, or Modified files (not Deleted)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "^_posts/.*\.md$" || true)
+
+# If no markdown files staged, exit successfully
+if [ -z "$STAGED_FILES" ]; then
+    exit 0
+fi
+
+echo "Running Notion callout conversion on staged markdown files..."
+
+# Process each staged markdown file
+FAILED=false
+for FILE in $STAGED_FILES; do
+    FULL_PATH="${REPO_ROOT}/${FILE}"
+
+    # Skip if file doesn't exist (shouldn't happen, but safety check)
+    if [ ! -f "$FULL_PATH" ]; then
+        continue
+    fi
+
+    echo "  Processing: $FILE"
+
+    # Run translate.py on the file (modifies in place)
+    if ! python3 "$TRANSLATE_SCRIPT" -i "$FULL_PATH"; then
+        echo "  ERROR: Failed to process $FILE"
+        FAILED=true
+    fi
+done
+
+# If any file failed to process, abort the commit
+if [ "$FAILED" = true ]; then
+    echo ""
+    echo "Error: Translation failed for one or more files."
+    echo "Please fix the errors above and try committing again."
+    exit 1
+fi
+
+# Re-stage all processed files to include the translations in the commit
+echo "Re-staging converted files..."
+for FILE in $STAGED_FILES; do
+    git add "$FILE"
+done
+
+echo "Conversion successful. Files staged and ready to commit."
+exit 0
