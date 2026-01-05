@@ -127,6 +127,7 @@ In Hub-and-Spoke-Szenarien empfiehlt sich folgendes Setup:
 
 Typische Private DNS Zones:
 
+
 - [`privatelink.blob.core.windows.net`](https://privatelink.blob.core.windows.net) (Azure Storage Blobs)
 - [`privatelink.vaultcore.azure.net`](https://privatelink.vaultcore.azure.net) (Key Vault)
 - [`privatelink.azuredatabricks.net`](https://privatelink.azuredatabricks.net) (Databricks)

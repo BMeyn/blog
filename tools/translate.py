@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
 """
-Script to convert Notion callout format to blog post format and upgrade HTTP URLs to HTTPS
+Script to convert Notion exports to blog post format:
+- Converts Notion callout blocks to Jekyll prompt format
+- Upgrades all HTTP URLs to HTTPS
+- Removes Notion attachment images
+
 Usage: python3 translate.py -i input.md [-o output.md]
 """
 
@@ -98,6 +102,16 @@ def convert_http_to_https(content):
 
     return re.sub(pattern, replace_url, content)
 
+def remove_attachment_images(content):
+    """Remove Notion attachment images that won't work in Jekyll"""
+
+    # Pattern to find Notion attachment images
+    # Matches: ![anything](attachment:uuid:filename)
+    pattern = r'!\[.*?\]\(attachment:.*?\)\s*\n?'
+
+    # Remove all attachment images
+    return re.sub(pattern, '', content)
+
 def main():
     parser = argparse.ArgumentParser(
         description='Convert Notion callout format to blog post format'
@@ -125,8 +139,11 @@ def main():
         # Convert callouts
         converted = convert_callouts(content)
 
-        # Convert HTTP to HTTPS for real external URLs
+        # Convert HTTP to HTTPS for all URLs
         converted = convert_http_to_https(converted)
+
+        # Remove Notion attachment images
+        converted = remove_attachment_images(converted)
 
         # Write output file
         with open(output_file, 'w', encoding='utf-8') as f:
