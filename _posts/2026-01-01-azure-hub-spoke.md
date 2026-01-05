@@ -4,7 +4,7 @@ date: 2026-01-01 10:00:00 +0000
 categories: [Azure, Architektur]
 tags: [azure, networking, infrastructure-as-code, architecture]
 image:
-  path: /assets/img/posts/dns-resolver-cover.jpeg
+  path: /assets/img/posts/hub-spoke-cover.png
 pin: false
 ---
 

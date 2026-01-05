@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Script to convert Notion callout format to blog post format
+Script to convert Notion callout format to blog post format and upgrade HTTP URLs to HTTPS
 Usage: python3 translate.py -i input.md [-o output.md]
 """
 
@@ -83,6 +83,53 @@ def convert_callouts(content):
     # Apply the replacement with DOTALL flag to match across newlines
     return re.sub(pattern, replace_aside, content, flags=re.DOTALL)
 
+def convert_http_to_https(content):
+    """Convert HTTP to HTTPS for real external URLs only"""
+
+    # Common TLDs for real websites
+    common_tlds = [
+        'com', 'org', 'net', 'io', 'gov', 'edu', 'de', 'uk',
+        'fr', 'jp', 'cn', 'au', 'ca', 'in', 'ru', 'br', 'co'
+    ]
+
+    # Pattern to find markdown links with http://
+    # Captures: [link text](http://url)
+    pattern = r'\[([^\]]+)\]\(http://([^)]+)\)'
+
+    def should_convert_url(url):
+        """Determine if URL is a real external URL that should be converted"""
+
+        # Skip Azure Private Link DNS zones
+        if url.startswith('privatelink.'):
+            return False
+
+        # Skip file extensions (.py, .js, .tf, etc.)
+        if re.match(r'^[^/]+\.(py|js|ts|tf|json|yaml|yml|md)$', url):
+            return False
+
+        # Skip Microsoft namespace references
+        if url.startswith('Microsoft.'):
+            return False
+
+        # Check if URL has a common TLD
+        for tld in common_tlds:
+            if f'.{tld}/' in url or url.endswith(f'.{tld}'):
+                return True
+
+        return False
+
+    def replace_url(match):
+        link_text = match.group(1)
+        url = match.group(2)
+
+        if should_convert_url(url):
+            return f'[{link_text}](https://{url})'
+        else:
+            # Keep original http://
+            return match.group(0)
+
+    return re.sub(pattern, replace_url, content)
+
 def main():
     parser = argparse.ArgumentParser(
         description='Convert Notion callout format to blog post format'
@@ -109,6 +156,9 @@ def main():
 
         # Convert callouts
         converted = convert_callouts(content)
+
+        # Convert HTTP to HTTPS for real external URLs
+        converted = convert_http_to_https(converted)
 
         # Write output file
         with open(output_file, 'w', encoding='utf-8') as f:
