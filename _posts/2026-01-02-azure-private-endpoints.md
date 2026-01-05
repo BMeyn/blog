@@ -3,10 +3,9 @@ title: "Private DNS Resolver in Azure – Enterprise DNS-Architektur für Privat
 date: 2026-01-01 10:00:00 +0000
 categories: [Azure, Netzwerk, Architektur]
 tags: [azure, dns, networking, infrastructure-as-code]
-# image:
-#   path: /assets/img/posts/dns-resolver-cover.jpeg
 pin: false
 ---
+
 Private Endpoints in Azure sind mittlerweile Standard in den meisten Enterprise-Umgebungen. Sie schotten Azure-Services vom öffentlichen Internet ab und machen sie ausschließlich über private IP-Adressen erreichbar. Soweit die Theorie.
 
 In der Praxis scheitern Private Endpoint-Implementierungen erstaunlich häufig an einem Detail, das viele Teams erst zu spät auf dem Radar haben: DNS. Genauer gesagt, die DNS-Integration zwischen Azure und On-Premises-Systemen.
@@ -96,7 +95,7 @@ Die empfohlene Architektur folgt dem Hub-and-Spoke-Modell mit zentralisierter DN
 
 **DNS-Flow**:
 
-1. On-Premises-Client fragt [`storageaccount.blob.core.windows.net`](http://storageaccount.blob.core.windows.net)
+1. On-Premises-Client fragt [`storageaccount.blob.core.windows.net`](https://storageaccount.blob.core.windows.net)
 2. On-Premises-DNS leitet Anfrage zu Private DNS Resolver (10.0.1.4)
 3. Private DNS Resolver prüft verknüpfte Private DNS Zones
 4. Gibt private IP (10.10.1.5) zurück
@@ -179,9 +178,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "hub" {
 }
 ```
 
-> <img src="/icons/light-bulb_gray.svg" alt="/icons/light-bulb_gray.svg" width="40px" />
-
-**Best Practice**: Erstellen Sie alle potenziell benötigten Zones von Anfang an. Kosten: ~$0,50/Monat pro Zone.
+> **Best Practice**: Erstellen Sie alle potenziell benötigten Zones von Anfang an. Kosten: ~$0,50/Monat pro Zone.
 {: .prompt-info }
 
 ### Phase 3: Private DNS Resolver deployen
@@ -258,9 +255,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "spoke_prod" {
 }
 ```
 
-> <img src="/icons/light-bulb_gray.svg" alt="/icons/light-bulb_gray.svg" width="40px" />
-
-**Best Practice:** Erstellung und Verlinkung zwischen Hub und Spoke VNets sollte zentral über den Hubt erfolgen. Dazu sollte ein Terraform-Modul für automatische VNet-Verlinkung verwendet werden
+> **Best Practice:** Erstellung und Verlinkung zwischen Hub und Spoke VNets sollte zentral über den Hubt erfolgen. Dazu sollte ein Terraform-Modul für automatische VNet-Verlinkung verwendet werden
 {: .prompt-info }
 
 ### Phase 5: On-Premises-Integration
@@ -304,14 +299,14 @@ zone "[privatelink.blob.core.windows.net](http://privatelink.blob.core.windows.n
 
 ```bash
 # DNS-Auflösung testen
-nslookup [mystorageaccount.blob.core.windows.net](http://mystorageaccount.blob.core.windows.net)
+nslookup [mystorageaccount.blob.core.windows.net](https://mystorageaccount.blob.core.windows.net)
 
 # Erwartetes Ergebnis:
-Name:    [mystorageaccount.privatelink.blob.core.windows.net](http://mystorageaccount.privatelink.blob.core.windows.net)
+Name:    [mystorageaccount.privatelink.blob.core.windows.net](https://mystorageaccount.privatelink.blob.core.windows.net)
 Address:  10.10.1.5
 
 # Konnektivitätstest
-telnet [mystorageaccount.blob.core.windows.net](http://mystorageaccount.blob.core.windows.net) 443
+telnet [mystorageaccount.blob.core.windows.net](https://mystorageaccount.blob.core.windows.net) 443
 ```
 
 **Erfolg**: Private IP-Adresse (10.10.1.5) statt öffentlicher IP!
@@ -446,7 +441,7 @@ Erzwingen Sie DNS-Integration für alle Private Endpoints:
 
 1. **Conditional Forwarder korrekt?** Richtige Zone-Namen und Forwarder-IP prüfen
 2. **DNS-Cache leeren**: `ipconfig /flushdns` oder `Clear-DnsClientCache`
-3. **Direkt an Forwarder testen**: `nslookup [mystorageaccount.blob.core.windows.net](http://mystorageaccount.blob.core.windows.net) 10.0.1.4`
+3. **Direkt an Forwarder testen**: `nslookup [mystorageaccount.blob.core.windows.net](https://mystorageaccount.blob.core.windows.net) 10.0.1.4`
 4. **VNet-Link für Hub vorhanden?** Azure Portal → Private DNS Zone → Virtual network links
 
 ### Azure VMs in Spokes lösen nicht korrekt auf
