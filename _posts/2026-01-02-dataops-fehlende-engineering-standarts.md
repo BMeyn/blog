@@ -3,6 +3,9 @@ title: "DataOps in der Praxis: Warum die meisten Data Platforms an fehlenden Eng
 date: 2026-01-02 10:00:00 +0000
 categories: [DataOps, Databricks, CI/CD, Testing, Azure]
 tags: [azure, databricks, dataops, ci/cd, testing, infrastructure-as-code]
+image:
+  path: /assets/img/posts/dataops-cover.jpeg
+  alt: "DataOps in der Praxis"
 pin: false
 ---
 
