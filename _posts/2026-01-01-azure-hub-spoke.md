@@ -18,10 +18,10 @@ Hub-and-Spoke adressiert genau diese Probleme. Ein zentrales VNet für Shared Se
 Dieser Artikel zeigt, warum Hub-and-Spoke in Enterprise-Umgebungen funktioniert, welche Komponenten entscheidend sind und wo die häufigsten Stolpersteine liegen.
 
 > **Zentrale Fragen**:
-
-- Warum scheitern Flat Networks und Mesh-Strukturen in Enterprise-Umgebungen?
-- Wie funktioniert Hub-and-Spoke technisch und was sind die kritischen Komponenten?
-- Welche Stolpersteine gibt es in der Praxis und wie vermeidet man sie?
+>
+> - Warum scheitern Flat Networks und Mesh-Strukturen in Enterprise-Umgebungen?
+> - Wie funktioniert Hub-and-Spoke technisch und was sind die kritischen Komponenten?
+> - Welche Stolpersteine gibt es in der Praxis und wie vermeidet man sie?
 {: .prompt-info }
 
 ## Das Problem: Flat Networks skalieren nicht
@@ -282,10 +282,10 @@ Manche Unternehmen brauchen unterschiedliche Security-Level:
 Das kann via **separate NSGs und Firewall Rules** umgesetzt werden – alles zentral im Hub verwaltet.
 
 > **Die wichtigsten Erkenntnisse auf einen Blick**:
-
-- **Warum scheitern Flat Networks?**: Sie skalieren nicht, führen zu inkonsistenten Regeln, explodierenden Kosten und bieten keine klare Separation – NSG-Wildwuchs ist die Folge
-- **Wie funktioniert Hub-and-Spoke?**: Zentrale Shared Services im Hub (Firewall, DNS, Gateway), isolierte Workloads in Spokes, verbunden via VNet Peering – aber VNet Peering ist nicht transitiv, alle Inter-Spoke-Kommunikation läuft über die Firewall
-- **Kritische Stolpersteine vermeiden**: Private DNS Zones korrekt verlinken (sonst greifen Spokes auf öffentliche IPs zu), NSG-Rules für spezielle Workloads (z.B. Databricks) nicht vergessen, Firewall-Rules nicht zu restriktiv setzen – immer von einer VM im Spoke testen
+>
+> - **Warum scheitern Flat Networks?**: Sie skalieren nicht, führen zu inkonsistenten Regeln, explodierenden Kosten und bieten keine klare Separation – NSG-Wildwuchs ist die Folge
+> - **Wie funktioniert Hub-and-Spoke?**: Zentrale Shared Services im Hub (Firewall, DNS, Gateway), isolierte Workloads in Spokes, verbunden via VNet Peering – aber VNet Peering ist nicht transitiv, alle Inter-Spoke-Kommunikation läuft über die Firewall
+> - **Kritische Stolpersteine vermeiden**: Private DNS Zones korrekt verlinken (sonst greifen Spokes auf öffentliche IPs zu), NSG-Rules für spezielle Workloads (z.B. Databricks) nicht vergessen, Firewall-Rules nicht zu restriktiv setzen – immer von einer VM im Spoke testen
 {: .prompt-info }
 
 ## Fazit
