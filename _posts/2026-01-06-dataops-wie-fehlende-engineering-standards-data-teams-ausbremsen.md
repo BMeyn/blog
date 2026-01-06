@@ -1,6 +1,6 @@
 ---
 title: "DataOps: Wie fehlende Engineering-Standards Data Teams ausbremsen"
-date: 2026-01-06 13:35:58 +0000
+date: 2026-01-06 13:45:27 +0000
 categories: [Databricks, DataOps, Data Engineering]
 tags: []
 image:
