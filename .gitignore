@@ -25,3 +25,7 @@ package-lock.json
 # Misc
 _sass/vendors
 assets/js/dist
+
+# Environment variables (contains API keys)
+.env
+tools/__pycache__/sync_notion.cpython-39.pyc

@@ -1,0 +1,22 @@
+# Notion API and Blog Sync Dependencies
+
+# Notion API client
+notion-client>=2.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# HTTP requests for image downloads
+requests>=2.31.0
+
+# Slug generation for URLs
+python-slugify>=8.0.0
+
+# HTML parsing (for translate.py)
+beautifulsoup4>=4.12.0
+
+# HTML to Markdown conversion (if needed)
+markdownify>=0.11.0
+
+# Image processing
+Pillow>=10.0.0
