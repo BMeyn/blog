@@ -17,7 +17,6 @@ Was ich in vielen Projekten beobachte: Teams deployen Private Endpoints sauber p
 Dieser Artikel zeigt, wie eine zentrale DNS-Architektur mit Azure Private DNS Resolver dieses Problem grundlegend löst. Nicht als Quick-Fix, sondern als skalierbare Lösung, die bei jedem neuen Private Endpoint funktioniert – ohne manuelle DNS-Konfiguration auf On-Premises-Servern.
 
 > **Was Sie in diesem Artikel finden**:
-
 - Enterprise DNS-Architektur mit zentralisiertem Hub-Modell
 - Private DNS Resolver Setup für Hybrid-Szenarien
 - Terraform-Implementierung für automatisierte Deployments
@@ -455,7 +454,6 @@ Erzwingen Sie DNS-Integration für alle Private Endpoints:
 **Lösung**: A-Record manuell erstellen oder Private Endpoint neu deployen mit DNS Zone Group.
 
 > **Checkliste: Setup abgeschlossen**
-
 **Connectivity Hub**:
 - [ ]  Private DNS Resolver mit Inbound Endpoint deployed
 - [ ]  Alle Private DNS Zones erstellt und mit Hub verknüpft

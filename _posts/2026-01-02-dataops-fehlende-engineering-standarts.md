@@ -9,9 +9,9 @@ pin: false
 ---
 In den meisten Enterprise-Projekten läuft die technische Seite von Data Platforms gut. Unity Catalog ist eingerichtet, Delta Lake verarbeitet Daten, die Architektur steht. Teams liefern erste Pipelines ab.
 
-Was in der Praxis jedoch häufig fehlt: **Engineering-Disziplin.** Schema-Änderungen brechen nachgelagerte Systeme, weil niemand die Abhängigkeiten kennt. Code landet ohne Tests direkt in Production. Incidents werden durch manuelle Fixes gelöst, die nie in Git landen. Neue Team-Mitglieder brauchen Wochen, um zu verstehen, wo welcher Code liegt.
+Was in der Praxis jedoch häufig fehlt: Engineering-Disziplin**.** Schema-Änderungen brechen nachgelagerte Systeme, weil niemand die Abhängigkeiten kennt. Code landet ohne Tests direkt in Production. Incidents werden durch manuelle Fixes gelöst, die nie in Git landen. Neue Team-Mitglieder brauchen Wochen, um zu verstehen, wo welcher Code liegt.
 
-Das Problem ist nicht die Technologie. **Das Problem sind fehlende Engineering-Standards.**
+Das Problem ist nicht die Technologie. Das Problem sind fehlende Engineering-Standards.
 
 Während Software-Teams seit Jahren auf automatisierte Tests und Infrastructure as Code setzen, fehlen diese Standards in vielen Data-Teams noch. Der Unterschied ist messbar: längere Deployments, mehr Incidents, schwierigeres Onboarding.
 
@@ -30,17 +30,15 @@ Dieser Artikel zeigt, was DataOps im Kontext von Azure und Databricks konkret be
 
 ### Symptome in der Praxis
 
-Die Muster wiederholen sich:
-
-**Pipeline-Änderungen landen direkt in Production**
+**→ Pipeline-Änderungen landen direkt in Production**
 
 Kein Test-Environment. Kein Code Review. Ein Developer ändert die Transformationslogik am Freitagnachmittag, deployed – und am Montagmorgen sind drei Dashboards kaputt.
 
-**Notebook-Code wird manuell kopiert**
+**→ Notebook-Code wird manuell kopiert**
 
 Zwischen Workspaces, zwischen Umgebungen. Jemand fragt im Slack: "Welche Version des Notebooks läuft gerade in Prod?" Niemand weiß es genau.
 
-**Schema-Änderungen brechen nachgelagerte Systeme**
+**→ Schema-Änderungen brechen nachgelagerte Systeme**
 
 Eine neue Spalte wird hinzugefügt, eine alte umbenannt. Downstream-Pipelines fallen um. Die Abhängigkeiten kennt niemand, automatisches Lineage-Tracking fehlt.
 
@@ -61,7 +59,7 @@ Das Team verbringt mehr Zeit mit Firefighting als mit echtem Engineering. Techni
 
 ### Keine Rocket Science
 
-DataOps ist kein Framework und kein Tool. Es ist die **Anwendung bewährter Software-Engineering-Praktiken auf Data Pipelines**.
+DataOps ist kein Framework und kein Tool. Es ist die Anwendung bewährter Software-Engineering-Praktiken auf Data Pipelines.
 
 Drei zentrale Säulen:
 
@@ -121,7 +119,7 @@ my-data-platform/
 │   └── data_ingestion.yml  # Job-Definition
 └── src/
     └── pipelines/
-        └── [ingestion.py](http://ingestion.py)
+        └── [ingestion.py](https://ingestion.py)
 ```
 
 **databricks.yml** – Bundle-Konfiguration:
@@ -137,12 +135,12 @@ targets:
   dev:
     mode: development
     workspace:
-      host: [adb-dev.azuredatabricks.net](http://adb-dev.azuredatabricks.net)
+      host: [adb-dev.azuredatabricks.net](https://adb-dev.azuredatabricks.net)
   
   prod:
     mode: production
     workspace:
-      host: [adb-prod.azuredatabricks.net](http://adb-prod.azuredatabricks.net)
+      host: [adb-prod.azuredatabricks.net](https://adb-prod.azuredatabricks.net)
 ```
 
 **resources/data_ingestion.yml** – Job-Definition:
@@ -242,13 +240,13 @@ Das ist ein Irrtum. Testbare Pipelines sind möglich – wenn der Code richtig s
 Teste einzelne Transformations-Funktionen mit kleinen Daten-Samples.
 
 ```python
-# src/transformations/[customers.py](http://customers.py)
+# src/transformations/[customers.py](https://customers.py)
 from pyspark.sql import DataFrame
 import pyspark.sql.functions as F
 
 def normalize_customer_data(df: DataFrame) -> DataFrame:
     """Normalisiert Customer-Daten: Email lowercase, Whitespace trim."""
-    return [df.select](http://df.select)(
+    return [df.select](https://df.select)(
         F.col("customer_id"),
         F.lower(F.trim(F.col("email"))).alias("email_normalized"),
         F.trim(F.col("name")).alias("name")
@@ -256,7 +254,7 @@ def normalize_customer_data(df: DataFrame) -> DataFrame:
 ```
 
 ```python
-# tests/test_[transformations.py](http://transformations.py)
+# tests/test_[transformations.py](https://transformations.py)
 def test_normalize_customer_data(spark):
     # Arrange
     input_df = spark.createDataFrame([
@@ -287,7 +285,7 @@ def test_bronze_to_silver_pipeline(spark, tmp_path):
     run_bronze_to_silver_job(bronze_path, f"{tmp_path}/silver")
     
     # Assert: Prüfe Silver-Output
-    silver_df = [spark.read](http://spark.read).format("delta").load(f"{tmp_path}/silver/customers")
+    silver_df = [spark.read](https://spark.read).format("delta").load(f"{tmp_path}/silver/customers")
     assert silver_df.count() > 0
     assert "email_normalized" in silver_df.columns
 ```
@@ -456,8 +454,6 @@ jobs:
 - Kontrolliertes Deployment nach Prod mit manuellem Approval
 - GitHub Environment Protection für Production
 
-**Realistische Timeline:** Setup dauert 2-3 Tage für den Basis-Workflow, weitere 3-5 Tage für Edge Cases und Troubleshooting. Nicht die "15 Minuten" aus Marketing-Material.
-
 Nutze Databricks Asset Bundles statt custom Scripts. DABs sind das offizielle Tool und werden aktiv weiterentwickelt.
 
 ---
@@ -516,21 +512,13 @@ Unity Catalog macht Governance von "manueller Arbeit" zu "Code und Policy". Das 
 
 **Minimum-Monitoring für Production:**
 
-✅ **Pipeline-Erfolg/Fehler**
+→ **Pipeline-Erfolg/Fehler:** Job-Run-Status über Databricks API, Alerts bei Failed Runs
 
-Job-Run-Status über Databricks API, Alerts bei Failed Runs
+→ **Daten-Freshness:** Wann wurde die letzte Zeile geschrieben? Sind Daten älter als erwartet?
 
-✅ **Daten-Freshness**
+→ **Data Quality Metrics:** NULL-Rate pro Spalte, Anzahl Duplikate, Schema-Drifts
 
-Wann wurde die letzte Zeile geschrieben? Sind Daten älter als erwartet?
-
-✅ **Data Quality Metrics**
-
-NULL-Rate pro Spalte, Anzahl Duplikate, Schema-Drifts
-
-✅ **Kosten-Tracking**
-
-DBU-Consumption pro Job, Cluster-Uptime, Storage Growth
+→ **Kosten-Tracking:** DBU-Consumption pro Job, Cluster-Uptime, Storage Growth
 
 **Tool-Empfehlungen:**
 
@@ -545,17 +533,17 @@ DBU-Consumption pro Job, Cluster-Uptime, Storage Growth
 
 ### Was funktioniert
 
-**Start simple, iterate**
+**→ Start simple, iterate**
 
 Erfolgreiche Teams starten mit einer Pipeline und einem Test. Nicht mit einem kompletten Framework. Community-Berichte zeigen: Nach 5-8 Wochen werden erste Vorteile messbar. Nach 3-4 Monaten amortisiert sich der Aufwand.
 
-**Infrastructure as Code first**
+**→ Infrastructure as Code first**
 
 Teams berichten: Setup der ersten Databricks-Umgebung als Code dauert 3-5 Wochen. Der Payoff: Setup neuer Environments reduziert sich von Tagen auf unter eine Stunde.
 
-**Data Quality Tests als Einstieg**
+**→ Data Quality Tests als Einstieg**
 
-Der ROI ist sofort sichtbar. Ein NULL-Check auf kritischen IDs verhindert Stunden an Troubleshooting. Community-Feedback zeigt: Der erste verhinderte Incident rechtfertigt oft den gesamten Setup-Aufwand.
+Der ROI ist sofort sichtbar. Ein NULL-Check auf kritischen IDs verhindert Stunden a Troubleshooting. Community-Feedback zeigt: Der erste verhinderte Incident rechtfertigt oft den gesamten Setup-Aufwand.
 
 **"Golden Path" definieren**
 
