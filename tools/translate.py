@@ -79,7 +79,8 @@ def convert_callouts(content):
         # Build the output
         result = f'> {title_line}'
         if remaining_lines:
-            result += '\n\n' + '\n'.join(remaining_lines)
+            result += '\n>\n'  # Blank line within blockquote
+            result += '\n'.join(f'> {line}' for line in remaining_lines)
         result += f'\n{{: .{prompt_class} }}'
 
         return result
