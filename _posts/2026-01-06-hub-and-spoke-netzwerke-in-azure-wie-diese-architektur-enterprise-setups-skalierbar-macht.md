@@ -1,6 +1,6 @@
 ---
 title: "Hub-and-Spoke-Netzwerke in Azure: Wie diese Architektur Enterprise-Setups skalierbar macht"
-date: 2026-01-06 13:33:39 +0000
+date: 2026-01-06 13:35:55 +0000
 categories: [Azure, Architecture, Cloud Engineering]
 tags: []
 image:

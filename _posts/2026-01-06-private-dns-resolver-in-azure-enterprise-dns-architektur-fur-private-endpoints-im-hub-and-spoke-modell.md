@@ -1,6 +1,6 @@
 ---
 title: "Private DNS Resolver in Azure – Enterprise DNS-Architektur für Private Endpoints im Hub-and-Spoke-Modell"
-date: 2026-01-06 13:33:47 +0000
+date: 2026-01-06 13:36:02 +0000
 categories: [Cloud Engineering, Azure, Architecture]
 tags: []
 image:
