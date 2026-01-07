@@ -1,10 +1,10 @@
 ---
-title: "Git Commit Hooks Databricks edition"
-date: 2026-01-07 12:20:29 +0000
+title: "Git Commit Hooks für Databricks Projekte"
+date: 2026-01-07 16:45:03 +0000
 categories: [Databricks, DataOps, Data Engineering]
 tags: []
 image:
-  path: /assets/img/posts/git-commit-hooks-databricks-edition-cover.png
+  path: /assets/img/posts/git-commit-hooks-fur-databricks-projekte-cover.png
 pin: false
 ---
 
