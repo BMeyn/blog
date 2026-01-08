@@ -146,6 +146,60 @@ git commit --no-verify -m "Skip hooks for this commit"
 
 For more details, see [scripts/hooks/README.md](scripts/hooks/README.md).
 
+### 🔄 Notion Integration
+
+This blog supports automated synchronization of blog posts from Notion to Jekyll. Posts with status "Posted" in Notion are synced to the `_posts/` directory.
+
+**Key Features**:
+- ✅ Syncs published posts from Notion database
+- ✅ Downloads and converts images automatically
+- ✅ Converts Notion callouts to Jekyll prompt format
+- ✅ Upgrades HTTP links to HTTPS
+- ✅ **Deletes posts that are no longer in Notion** (preventing duplicates from renamed posts)
+
+#### How Deletion Works
+
+The sync script tracks which posts come from Notion using a `notion_id` field in the front matter:
+
+```yaml
+---
+title: "My Post"
+date: 2026-01-08 12:00:00 +0000
+categories: [Tech]
+tags: [tutorial]
+notion_id: abc123...  # Tracks this post's Notion page ID
+---
+```
+
+When a post is **renamed or deleted in Notion**:
+1. The sync detects posts with `notion_id` that are no longer in Notion
+2. Automatically deletes the orphaned post file
+3. Removes associated images (cover images and inline images)
+4. Keeps only the current version from Notion
+
+**Important Notes**:
+- Only posts with `notion_id` are managed by the sync script
+- Manual posts (without `notion_id`) are never deleted
+- This allows manual and Notion-synced posts to coexist safely
+
+#### Running the Sync
+
+The sync runs automatically via GitHub Actions when triggered from n8n or manually:
+
+```bash
+# Dry run (preview changes without committing)
+python3 tools/sync_notion.py --dry-run
+
+# Actual sync
+python3 tools/sync_notion.py
+```
+
+**Environment Variables** (required):
+- `NOTION_API_TOKEN` - Your Notion integration token
+- `NOTION_POSTS_DATABASE_ID` - Your Notion database ID
+
+For more details about the sync implementation, see `tools/sync_notion.py`.
+
 ## 📁 Project Structure
 
 ```

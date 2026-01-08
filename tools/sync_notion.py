@@ -22,6 +22,7 @@ import os
 import sys
 import argparse
 import requests
+import yaml
 from pathlib import Path
 from datetime import datetime
 from dotenv import load_dotenv
@@ -520,18 +521,30 @@ def get_existing_posts_with_notion_id():
         try:
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
+            
+            # Strip leading whitespace and check for front matter
+            content = content.lstrip()
+            if not content.startswith('---'):
+                continue
+            
+            # Extract front matter (between first and second ---)
+            parts = content.split('---', 2)
+            if len(parts) < 3:
+                continue
                 
-            # Extract front matter
-            if content.startswith('---'):
-                parts = content.split('---', 2)
-                if len(parts) >= 3:
-                    front_matter = parts[1]
-                    # Look for notion_id in front matter
-                    for line in front_matter.split('\n'):
-                        if line.strip().startswith('notion_id:'):
-                            notion_id = line.split(':', 1)[1].strip()
-                            notion_posts[notion_id] = filepath
-                            break
+            front_matter_str = parts[1]
+            
+            # Parse YAML safely
+            try:
+                front_matter = yaml.safe_load(front_matter_str)
+                if front_matter and isinstance(front_matter, dict):
+                    notion_id = front_matter.get('notion_id')
+                    if notion_id:
+                        notion_posts[str(notion_id)] = filepath
+            except yaml.YAMLError:
+                # Skip files with invalid YAML
+                continue
+                
         except Exception as e:
             print(f"  ⚠ Warning: Could not read {filepath}: {e}")
             
@@ -544,19 +557,35 @@ def extract_image_paths_from_post(filepath):
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
+        
+        # Strip leading whitespace and check for front matter
+        content = content.lstrip()
+        if not content.startswith('---'):
+            return image_paths
             
-        # Find image paths in front matter (image: path: ...)
-        if content.startswith('---'):
-            parts = content.split('---', 2)
-            if len(parts) >= 3:
-                front_matter = parts[1]
-                for line in front_matter.split('\n'):
-                    if 'path:' in line and '/assets/img/' in line:
-                        path = line.split('path:', 1)[1].strip()
-                        image_paths.append(path)
-                        
+        # Extract front matter and body
+        parts = content.split('---', 2)
+        if len(parts) < 3:
+            return image_paths
+            
+        front_matter_str = parts[1]
+        markdown_body = parts[2]
+        
+        # Parse YAML front matter safely
+        try:
+            front_matter = yaml.safe_load(front_matter_str)
+            if front_matter and isinstance(front_matter, dict):
+                # Extract image path from front matter
+                if 'image' in front_matter and isinstance(front_matter['image'], dict):
+                    img_path = front_matter['image'].get('path')
+                    if img_path and '/assets/img/' in img_path:
+                        image_paths.append(img_path)
+        except yaml.YAMLError:
+            # If YAML parsing fails, skip front matter images
+            pass
+        
         # Find image paths in markdown content ![alt](/assets/img/...)
-        for match in re.finditer(r'!\[.*?\]\((/assets/img/[^)]+)\)', content):
+        for match in re.finditer(r'!\[.*?\]\((/assets/img/[^)]+)\)', markdown_body):
             image_paths.append(match.group(1))
             
     except Exception as e:
@@ -565,22 +594,54 @@ def extract_image_paths_from_post(filepath):
     return image_paths
 
 def delete_post_and_images(filepath):
-    """Delete a post file and its associated images"""
+    """Delete a post file and its associated images
+    
+    Returns:
+        tuple: (success: bool, deleted_images: int)
+    """
     print(f"  🗑 Deleting post: {filepath.name}")
     
-    # Extract and delete associated images
+    # Extract image paths first (before deleting the post)
     image_paths = extract_image_paths_from_post(filepath)
-    for img_path in image_paths:
-        img_file = REPO_ROOT / img_path.lstrip('/')
-        if img_file.exists():
-            img_file.unlink()
-            print(f"    🗑 Deleted image: {img_path}")
-        else:
-            print(f"    ⚠ Image not found: {img_path}")
+    deleted_images = 0
     
-    # Delete the post file
-    filepath.unlink()
-    print(f"  ✓ Deleted post and {len(image_paths)} associated image(s)")
+    # Delete associated images with path validation
+    for img_path in image_paths:
+        try:
+            # Remove leading slash and construct full path
+            img_file = REPO_ROOT / img_path.lstrip('/')
+            
+            # Validate the path is within the repository
+            # resolve() resolves symlinks and .. sequences
+            resolved_img = img_file.resolve()
+            resolved_repo = REPO_ROOT.resolve()
+            
+            # Check if the resolved path is inside the repository
+            try:
+                resolved_img.relative_to(resolved_repo)
+            except ValueError:
+                print(f"    ⚠ Skipping image outside repository: {img_path}")
+                continue
+            
+            # Delete the image if it exists
+            if resolved_img.exists() and resolved_img.is_file():
+                resolved_img.unlink()
+                print(f"    🗑 Deleted image: {img_path}")
+                deleted_images += 1
+            else:
+                print(f"    ℹ Image not found: {img_path}")
+                
+        except Exception as e:
+            print(f"    ⚠ Error deleting image {img_path}: {e}")
+    
+    # Delete the post file after images
+    try:
+        filepath.unlink()
+        print(f"  ✓ Deleted post and {deleted_images} associated image(s)")
+        return True, deleted_images
+    except Exception as e:
+        print(f"  ✗ Error deleting post file: {e}")
+        return False, deleted_images
 
 def cleanup_orphaned_posts(notion_post_ids, dry_run=False):
     """Delete posts that are no longer in Notion with status 'Posted'"""
