@@ -542,9 +542,13 @@ def parse_front_matter(content):
     return None, None
 
 def get_existing_posts_with_notion_id():
-    """Find all existing posts that have a Notion ID in their front matter"""
+    """Find all existing posts that have a Notion ID in their front matter
+    
+    Returns:
+        dict: notion_id -> list of filepaths (to handle duplicates)
+    """
     posts_dir = REPO_ROOT / '_posts'
-    notion_posts = {}  # notion_id -> filepath
+    notion_posts = {}  # notion_id -> list of filepaths
     
     if not posts_dir.exists():
         return notion_posts
@@ -563,7 +567,10 @@ def get_existing_posts_with_notion_id():
             if front_matter:
                 notion_id = front_matter.get('notion_id')
                 if notion_id:
-                    notion_posts[str(notion_id)] = filepath
+                    notion_id_str = str(notion_id)
+                    if notion_id_str not in notion_posts:
+                        notion_posts[notion_id_str] = []
+                    notion_posts[notion_id_str].append(filepath)
                 
         except Exception as e:
             print(f"  ⚠ Warning: Could not read {filepath}: {e}")
@@ -657,22 +664,27 @@ def cleanup_orphaned_posts(notion_post_ids, dry_run=False):
         print("  ℹ No posts with Notion IDs found - nothing to clean up")
         return deleted_count
     
+    # Count total files (handling duplicates)
+    total_files = sum(len(filepaths) for filepaths in existing_posts.values())
+    
     print(f"\n🔍 Checking for posts to delete...")
-    print(f"  Found {len(existing_posts)} posts with Notion IDs")
+    print(f"  Found {len(existing_posts)} unique Notion IDs ({total_files} total files)")
     print(f"  Found {len(notion_post_ids)} published posts in Notion")
     
-    for notion_id, filepath in existing_posts.items():
+    for notion_id, filepaths in existing_posts.items():
         if notion_id not in notion_post_ids:
-            print(f"\n  ⚠ Post no longer in Notion: {filepath.name}")
-            print(f"    Notion ID: {notion_id}")
-            
-            if not dry_run:
-                delete_post_and_images(filepath)
-                deleted_count += 1
-            else:
-                print(f"    ✓ Would delete: {filepath}")
-                print(f"    ✓ Would delete associated images")
-                deleted_count += 1
+            # Delete all files with this notion_id (no longer in Notion)
+            for filepath in filepaths:
+                print(f"\n  ⚠ Post no longer in Notion: {filepath.name}")
+                print(f"    Notion ID: {notion_id}")
+                
+                if not dry_run:
+                    delete_post_and_images(filepath)
+                    deleted_count += 1
+                else:
+                    print(f"    ✓ Would delete: {filepath}")
+                    print(f"    ✓ Would delete associated images")
+                    deleted_count += 1
     
     if deleted_count == 0:
         print("  ✓ No orphaned posts found - all posts are in sync")
@@ -690,6 +702,9 @@ def sync_notion_posts(dry_run=False):
 
     # Track Notion IDs of all published posts
     notion_post_ids = set()
+    
+    # Get existing posts once for efficiency (avoid O(n²) complexity)
+    existing_posts_map = get_existing_posts_with_notion_id()
 
     for i, page in enumerate(posts, start=1):
         try:
@@ -746,9 +761,26 @@ def sync_notion_posts(dry_run=False):
             filename = generate_post_filename(metadata)
 
             if not dry_run:
+                # Check for existing posts with same notion_id but different filename
+                existing_paths = existing_posts_map.get(metadata['id'], [])
+                
+                # Delete any existing posts with different filenames (title changed or duplicates)
+                for existing_path in existing_paths:
+                    if existing_path.name != filename:
+                        # Title changed or duplicate - delete old post before creating new one
+                        print(f"  ℹ Removing old version: {existing_path.name}")
+                        delete_post_and_images(existing_path)
+                
                 filepath = write_post(filename, frontmatter, markdown)
                 print(f"  ✓ Created post: {filepath}\n")
             else:
+                # Dry run mode
+                existing_paths = existing_posts_map.get(metadata['id'], [])
+                
+                for existing_path in existing_paths:
+                    if existing_path.name != filename:
+                        print(f"  ℹ Would delete old version: {existing_path.name}")
+                
                 print(f"  ✓ Would create: _posts/{filename}\n")
 
         except Exception as e:
