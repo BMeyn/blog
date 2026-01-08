@@ -702,6 +702,9 @@ def sync_notion_posts(dry_run=False):
 
     # Track Notion IDs of all published posts
     notion_post_ids = set()
+    
+    # Get existing posts once for efficiency (avoid O(n²) complexity)
+    existing_posts_map = get_existing_posts_with_notion_id()
 
     for i, page in enumerate(posts, start=1):
         try:
@@ -759,8 +762,7 @@ def sync_notion_posts(dry_run=False):
 
             if not dry_run:
                 # Check for existing posts with same notion_id but different filename
-                existing_posts = get_existing_posts_with_notion_id()
-                existing_paths = existing_posts.get(metadata['id'], [])
+                existing_paths = existing_posts_map.get(metadata['id'], [])
                 
                 # Delete any existing posts with different filenames (title changed or duplicates)
                 for existing_path in existing_paths:
@@ -773,8 +775,7 @@ def sync_notion_posts(dry_run=False):
                 print(f"  ✓ Created post: {filepath}\n")
             else:
                 # Dry run mode
-                existing_posts = get_existing_posts_with_notion_id()
-                existing_paths = existing_posts.get(metadata['id'], [])
+                existing_paths = existing_posts_map.get(metadata['id'], [])
                 
                 for existing_path in existing_paths:
                     if existing_path.name != filename:
