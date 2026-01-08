@@ -12,6 +12,9 @@ requests>=2.31.0
 # Slug generation for URLs
 python-slugify>=8.0.0
 
+# YAML parsing for front matter
+PyYAML>=6.0.0
+
 # HTML parsing (for translate.py)
 beautifulsoup4>=4.12.0
 

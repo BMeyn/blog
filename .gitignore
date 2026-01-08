@@ -28,4 +28,9 @@ assets/js/dist
 
 # Environment variables (contains API keys)
 .env
-tools/__pycache__/sync_notion.cpython-39.pyc
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
