@@ -27,6 +27,10 @@ load_dotenv()
 NOTION_TOKEN = os.getenv('NOTION_API_TOKEN')
 NOTION_DATABASE_ID = os.getenv('NOTION_POSTS_DATABASE_ID')
 
+# Detect repository root (supports both devcontainer and GitHub Actions)
+SCRIPT_DIR = Path(__file__).parent.resolve()
+REPO_ROOT = SCRIPT_DIR.parent
+
 def init_notion_client():
     """Initialize Notion API client"""
     if not NOTION_TOKEN:
@@ -304,7 +308,7 @@ def download_image(url, slug, image_type='cover'):
         else:
             filename = f'{slug}-{image_type}.{ext}'
 
-        filepath = Path(f'/workspaces/blog/assets/img/posts/{filename}')
+        filepath = REPO_ROOT / 'assets' / 'img' / 'posts' / filename
         filepath.parent.mkdir(parents=True, exist_ok=True)
 
         with open(filepath, 'wb') as f:
@@ -483,7 +487,7 @@ def generate_post_filename(metadata):
 
 def write_post(filename, frontmatter, markdown):
     """Write complete post to _posts folder"""
-    filepath = Path(f'/workspaces/blog/_posts/{filename}')
+    filepath = REPO_ROOT / '_posts' / filename
     filepath.parent.mkdir(parents=True, exist_ok=True)
 
     with open(filepath, 'w', encoding='utf-8') as f:
