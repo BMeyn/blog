@@ -35,6 +35,9 @@ load_dotenv()
 NOTION_TOKEN = os.getenv('NOTION_API_TOKEN')
 NOTION_DATABASE_ID = os.getenv('NOTION_POSTS_DATABASE_ID')
 
+# Constants
+ASSETS_IMG_PATH = '/assets/img/'
+
 # Detect repository root (supports both devcontainer and GitHub Actions)
 SCRIPT_DIR = Path(__file__).parent.resolve()
 REPO_ROOT = SCRIPT_DIR.parent
@@ -506,6 +509,38 @@ def write_post(filename, frontmatter, markdown):
 
     return filepath
 
+def parse_front_matter(content):
+    """Parse YAML front matter from markdown content
+    
+    Args:
+        content: Raw markdown content with front matter
+        
+    Returns:
+        tuple: (front_matter_dict or None, markdown_body or None)
+    """
+    # Strip leading whitespace and check for front matter
+    content = content.lstrip()
+    if not content.startswith('---'):
+        return None, None
+    
+    # Extract front matter (between first and second ---)
+    parts = content.split('---', 2)
+    if len(parts) < 3:
+        return None, None
+    
+    front_matter_str = parts[1]
+    markdown_body = parts[2]
+    
+    # Parse YAML safely
+    try:
+        front_matter = yaml.safe_load(front_matter_str)
+        if front_matter and isinstance(front_matter, dict):
+            return front_matter, markdown_body
+    except yaml.YAMLError:
+        return None, None
+    
+    return None, None
+
 def get_existing_posts_with_notion_id():
     """Find all existing posts that have a Notion ID in their front matter"""
     posts_dir = REPO_ROOT / '_posts'
@@ -522,28 +557,13 @@ def get_existing_posts_with_notion_id():
             with open(filepath, 'r', encoding='utf-8') as f:
                 content = f.read()
             
-            # Strip leading whitespace and check for front matter
-            content = content.lstrip()
-            if not content.startswith('---'):
-                continue
+            # Parse front matter using shared helper
+            front_matter, _ = parse_front_matter(content)
             
-            # Extract front matter (between first and second ---)
-            parts = content.split('---', 2)
-            if len(parts) < 3:
-                continue
-                
-            front_matter_str = parts[1]
-            
-            # Parse YAML safely
-            try:
-                front_matter = yaml.safe_load(front_matter_str)
-                if front_matter and isinstance(front_matter, dict):
-                    notion_id = front_matter.get('notion_id')
-                    if notion_id:
-                        notion_posts[str(notion_id)] = filepath
-            except yaml.YAMLError:
-                # Skip files with invalid YAML
-                continue
+            if front_matter:
+                notion_id = front_matter.get('notion_id')
+                if notion_id:
+                    notion_posts[str(notion_id)] = filepath
                 
         except Exception as e:
             print(f"  ⚠ Warning: Could not read {filepath}: {e}")
@@ -558,35 +578,20 @@ def extract_image_paths_from_post(filepath):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Strip leading whitespace and check for front matter
-        content = content.lstrip()
-        if not content.startswith('---'):
-            return image_paths
-            
-        # Extract front matter and body
-        parts = content.split('---', 2)
-        if len(parts) < 3:
-            return image_paths
-            
-        front_matter_str = parts[1]
-        markdown_body = parts[2]
+        # Parse front matter using shared helper
+        front_matter, markdown_body = parse_front_matter(content)
         
-        # Parse YAML front matter safely
-        try:
-            front_matter = yaml.safe_load(front_matter_str)
-            if front_matter and isinstance(front_matter, dict):
-                # Extract image path from front matter
-                if 'image' in front_matter and isinstance(front_matter['image'], dict):
-                    img_path = front_matter['image'].get('path')
-                    if img_path and '/assets/img/' in img_path:
-                        image_paths.append(img_path)
-        except yaml.YAMLError:
-            # If YAML parsing fails, skip front matter images
-            pass
+        if front_matter:
+            # Extract image path from front matter
+            if 'image' in front_matter and isinstance(front_matter['image'], dict):
+                img_path = front_matter['image'].get('path')
+                if img_path and ASSETS_IMG_PATH in img_path:
+                    image_paths.append(img_path)
         
         # Find image paths in markdown content ![alt](/assets/img/...)
-        for match in re.finditer(r'!\[.*?\]\((/assets/img/[^)]+)\)', markdown_body):
-            image_paths.append(match.group(1))
+        if markdown_body:
+            for match in re.finditer(rf'!\[.*?\]\(({re.escape(ASSETS_IMG_PATH)}[^)]+)\)', markdown_body):
+                image_paths.append(match.group(1))
             
     except Exception as e:
         print(f"  ⚠ Warning: Could not extract images from {filepath}: {e}")
