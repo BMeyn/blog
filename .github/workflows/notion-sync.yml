@@ -1,0 +1,108 @@
+name: Sync Notion Posts
+
+on:
+  # Triggered by n8n via GitHub API
+  repository_dispatch:
+    types: [notion-sync]
+
+  # Manual trigger via GitHub UI for testing
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (preview changes without committing)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+# Prevent concurrent syncs
+concurrency:
+  group: notion-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Notion sync
+        env:
+          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          NOTION_POSTS_DATABASE_ID: ${{ secrets.NOTION_POSTS_DATABASE_ID }}
+        run: |
+          # Check dry-run mode from either workflow_dispatch or repository_dispatch
+          DRY_RUN_FLAG=""
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]] || \
+             [[ "${{ github.event.client_payload.dry_run }}" == "true" ]]; then
+            echo "Running in DRY RUN mode"
+            DRY_RUN_FLAG="--dry-run"
+          fi
+
+          python3 tools/sync_notion.py $DRY_RUN_FLAG
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Changes detected:"
+            git status --short
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          fi
+
+      - name: Commit and push changes
+        if: steps.changes.outputs.has_changes == 'true' && github.event.inputs.dry_run != 'true' && github.event.client_payload.dry_run != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add _posts/ assets/img/posts/
+
+          # Create commit message with timestamp and trigger info
+          git commit -m "chore: sync blog posts from Notion
+
+          - Synced at $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+          - Triggered by: ${{ github.event_type }}
+
+          Co-authored-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+
+          git push
+
+      - name: Workflow summary
+        run: |
+          echo "## Notion Sync Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ github.event.inputs.dry_run }}" == "true" ]] || \
+             [[ "${{ github.event.client_payload.dry_run }}" == "true" ]]; then
+            echo "**Mode**: Dry run (no changes committed)" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ steps.changes.outputs.has_changes }}" == "true" ]]; then
+            echo "**Status**: ✅ Synced and committed changes" >> $GITHUB_STEP_SUMMARY
+            echo "**Changes**: New posts and/or images added" >> $GITHUB_STEP_SUMMARY
+            echo "**Next**: Deployment workflow will automatically build and publish" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "**Status**: ℹ️ No new posts to sync" >> $GITHUB_STEP_SUMMARY
+            echo "**Result**: Repository is up to date" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by**: ${{ github.event_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
