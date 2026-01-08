@@ -1,8 +1,9 @@
 ---
 title: "Pre-Commit Hooks: Das fehlende Quality Gate in Databricks Projekten"
-date: 2026-01-08 11:37:48 +0000
+date: 2026-01-08 12:17:36 +0000
 categories: [Databricks, DataOps, Data Engineering]
 tags: []
+notion_id: 0482f5c1-523c-41f3-8a6f-3f3e58bb596a
 image:
   path: /assets/img/posts/pre-commit-hooks-das-fehlende-quality-gate-in-databricks-projekten-cover.png
 pin: false
