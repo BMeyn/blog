@@ -7,8 +7,15 @@ Syncs published blog posts from a Notion database directly to Jekyll.
 Downloads images, converts content to Markdown, and generates Jekyll front matter.
 Converts Notion callout blocks to Jekyll blockquote format.
 Upgrades HTTP links to HTTPS.
+Deletes posts that are no longer in Notion with status "Posted".
 
 Usage: python3 tools/sync_notion.py
+
+Migration Note:
+  - Posts synced with this script will have a 'notion_id' field in their front matter
+  - Only posts with 'notion_id' will be managed (updated/deleted) by this script
+  - Posts without 'notion_id' are ignored and won't be deleted
+  - This allows manual posts to coexist with Notion-synced posts
 """
 
 import os
@@ -462,6 +469,7 @@ title: "{metadata['title']}"
 date: {date_str}
 categories: [{', '.join(categories)}]
 tags: [{', '.join(tags)}]
+notion_id: {metadata['id']}
 """
 
     if cover_image_path:
@@ -497,6 +505,114 @@ def write_post(filename, frontmatter, markdown):
 
     return filepath
 
+def get_existing_posts_with_notion_id():
+    """Find all existing posts that have a Notion ID in their front matter"""
+    posts_dir = REPO_ROOT / '_posts'
+    notion_posts = {}  # notion_id -> filepath
+    
+    if not posts_dir.exists():
+        return notion_posts
+    
+    for filepath in posts_dir.glob('*.md'):
+        if filepath.name == '.placeholder':
+            continue
+            
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+                
+            # Extract front matter
+            if content.startswith('---'):
+                parts = content.split('---', 2)
+                if len(parts) >= 3:
+                    front_matter = parts[1]
+                    # Look for notion_id in front matter
+                    for line in front_matter.split('\n'):
+                        if line.strip().startswith('notion_id:'):
+                            notion_id = line.split(':', 1)[1].strip()
+                            notion_posts[notion_id] = filepath
+                            break
+        except Exception as e:
+            print(f"  ⚠ Warning: Could not read {filepath}: {e}")
+            
+    return notion_posts
+
+def extract_image_paths_from_post(filepath):
+    """Extract all image paths from a post file"""
+    image_paths = []
+    
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        # Find image paths in front matter (image: path: ...)
+        if content.startswith('---'):
+            parts = content.split('---', 2)
+            if len(parts) >= 3:
+                front_matter = parts[1]
+                for line in front_matter.split('\n'):
+                    if 'path:' in line and '/assets/img/' in line:
+                        path = line.split('path:', 1)[1].strip()
+                        image_paths.append(path)
+                        
+        # Find image paths in markdown content ![alt](/assets/img/...)
+        for match in re.finditer(r'!\[.*?\]\((/assets/img/[^)]+)\)', content):
+            image_paths.append(match.group(1))
+            
+    except Exception as e:
+        print(f"  ⚠ Warning: Could not extract images from {filepath}: {e}")
+        
+    return image_paths
+
+def delete_post_and_images(filepath):
+    """Delete a post file and its associated images"""
+    print(f"  🗑 Deleting post: {filepath.name}")
+    
+    # Extract and delete associated images
+    image_paths = extract_image_paths_from_post(filepath)
+    for img_path in image_paths:
+        img_file = REPO_ROOT / img_path.lstrip('/')
+        if img_file.exists():
+            img_file.unlink()
+            print(f"    🗑 Deleted image: {img_path}")
+        else:
+            print(f"    ⚠ Image not found: {img_path}")
+    
+    # Delete the post file
+    filepath.unlink()
+    print(f"  ✓ Deleted post and {len(image_paths)} associated image(s)")
+
+def cleanup_orphaned_posts(notion_post_ids, dry_run=False):
+    """Delete posts that are no longer in Notion with status 'Posted'"""
+    existing_posts = get_existing_posts_with_notion_id()
+    deleted_count = 0
+    
+    if not existing_posts:
+        print("  ℹ No posts with Notion IDs found - nothing to clean up")
+        return deleted_count
+    
+    print(f"\n🔍 Checking for posts to delete...")
+    print(f"  Found {len(existing_posts)} posts with Notion IDs")
+    print(f"  Found {len(notion_post_ids)} published posts in Notion")
+    
+    for notion_id, filepath in existing_posts.items():
+        if notion_id not in notion_post_ids:
+            print(f"\n  ⚠ Post no longer in Notion: {filepath.name}")
+            print(f"    Notion ID: {notion_id}")
+            
+            if not dry_run:
+                delete_post_and_images(filepath)
+                deleted_count += 1
+            else:
+                print(f"    ✓ Would delete: {filepath}")
+                print(f"    ✓ Would delete associated images")
+                deleted_count += 1
+    
+    if deleted_count == 0:
+        print("  ✓ No orphaned posts found - all posts are in sync")
+    
+    return deleted_count
+
 def sync_notion_posts(dry_run=False):
     """Main function to sync all published posts from Notion"""
     print("Initializing Notion client...")
@@ -505,6 +621,9 @@ def sync_notion_posts(dry_run=False):
     print("Fetching published posts from Notion database...")
     posts = get_published_posts(notion)
     print(f"Found {len(posts)} published posts\n")
+
+    # Track Notion IDs of all published posts
+    notion_post_ids = set()
 
     for i, page in enumerate(posts, start=1):
         try:
@@ -518,6 +637,7 @@ def sync_notion_posts(dry_run=False):
 
             # Extract metadata
             metadata = extract_metadata(page)
+            notion_post_ids.add(metadata['id'])  # Track this Notion ID
             print(f"  ✓ Extracted metadata")
 
             # Get content blocks
@@ -571,6 +691,12 @@ def sync_notion_posts(dry_run=False):
             continue
 
     print(f"✓ Synced {len(posts)} posts successfully!")
+
+    # Clean up posts that are no longer in Notion
+    deleted_count = cleanup_orphaned_posts(notion_post_ids, dry_run)
+    
+    if deleted_count > 0:
+        print(f"\n✓ Cleaned up {deleted_count} orphaned post(s)")
 
     if not dry_run:
         print("\nNext steps:")
