@@ -44,6 +44,8 @@ NOTION_DATABASE_ID = os.getenv('NOTION_POSTS_DATABASE_ID')
 
 # Constants
 ASSETS_IMG_PATH = '/assets/img/'
+BLOG_BASE_URL = '/blog'  # Jekyll baseurl from _config.yml
+BLOG_POSTS_URL_FORMAT = '/posts/{slug}/'  # Jekyll/Chirpy URL format
 
 # Detect repository root (supports both devcontainer and GitHub Actions)
 SCRIPT_DIR = Path(__file__).parent.resolve()
@@ -208,6 +210,7 @@ def rich_text_to_markdown(rich_text_array, notion_id_to_url=None):
             elif text_obj.get('href'):
                 # Fallback to original Notion link if no mapping exists
                 text = f'[{text}]({text_obj["href"]})'
+            # If no href either, keep as plain text (should not happen in normal cases)
         # Handle regular links
         elif text_obj.get('href'):
             text = f'[{text}]({text_obj["href"]})'
@@ -636,12 +639,13 @@ def build_notion_id_to_url_mapping():
                     # Generate the blog post URL from the filename
                     # Format: YYYY-MM-DD-slug.md -> /blog/posts/slug/
                     filename = filepath.stem  # Remove .md extension
-                    parts = filename.split('-', 3)  # Split into date parts and slug
-                    if len(parts) >= 4:
-                        # parts = [YYYY, MM, DD, slug]
+                    # Split into date parts and slug, preserving hyphens in slug
+                    parts = filename.split('-', 3)  # maxsplit=3: [YYYY, MM, DD, rest-of-slug]
+                    if len(parts) == 4:
+                        # parts = [YYYY, MM, DD, slug-with-hyphens]
                         slug = parts[3]
-                        # Jekyll/Chirpy URL format: /blog/posts/slug/
-                        blog_url = f'/blog/posts/{slug}/'
+                        # Use constants for URL format
+                        blog_url = f'{BLOG_BASE_URL}{BLOG_POSTS_URL_FORMAT.format(slug=slug)}'
                         notion_id_to_url[str(notion_id)] = blog_url
                 
         except Exception as e:
