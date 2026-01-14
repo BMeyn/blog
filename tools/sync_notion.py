@@ -164,8 +164,13 @@ def get_block_children(notion, block_id):
 
     return children
 
-def rich_text_to_markdown(rich_text_array):
-    """Convert Notion rich text to Markdown"""
+def rich_text_to_markdown(rich_text_array, notion_id_to_url=None):
+    """Convert Notion rich text to Markdown
+    
+    Args:
+        rich_text_array: Array of Notion rich text objects
+        notion_id_to_url: Optional dict mapping Notion page IDs to blog post URLs
+    """
     if not rich_text_array:
         return ''
 
@@ -184,8 +189,20 @@ def rich_text_to_markdown(rich_text_array):
         if annotations['strikethrough']:
             text = f'~~{text}~~'
 
-        # Handle links
-        if text_obj.get('href'):
+        # Handle page mentions - convert Notion page links to blog post links
+        if text_obj.get('type') == 'mention' and text_obj.get('mention', {}).get('type') == 'page':
+            mention = text_obj['mention']
+            page_id = mention['page']['id']
+            
+            # Try to find the corresponding blog post URL
+            if notion_id_to_url and page_id in notion_id_to_url:
+                blog_url = notion_id_to_url[page_id]
+                text = f'[{text}]({blog_url})'
+            elif text_obj.get('href'):
+                # Fallback to original Notion link if no mapping exists
+                text = f'[{text}]({text_obj["href"]})'
+        # Handle regular links
+        elif text_obj.get('href'):
             text = f'[{text}]({text_obj["href"]})'
 
         result.append(text)
@@ -198,39 +215,45 @@ def rich_text_to_plain_text(rich_text_array):
         return ''
     return ''.join([text_obj['plain_text'] for text_obj in rich_text_array])
 
-def blocks_to_markdown(blocks, notion=None):
-    """Convert Notion blocks to Markdown format"""
+def blocks_to_markdown(blocks, notion=None, notion_id_to_url=None):
+    """Convert Notion blocks to Markdown format
+    
+    Args:
+        blocks: Notion block objects
+        notion: Notion client for fetching child blocks
+        notion_id_to_url: Optional dict mapping Notion page IDs to blog post URLs
+    """
     markdown_lines = []
 
     for block in blocks:
         block_type = block['type']
 
         if block_type == 'paragraph':
-            text = rich_text_to_markdown(block['paragraph']['rich_text'])
+            text = rich_text_to_markdown(block['paragraph']['rich_text'], notion_id_to_url)
             markdown_lines.append(text)
             markdown_lines.append('')  # Blank line
 
         elif block_type == 'heading_1':
-            text = rich_text_to_markdown(block['heading_1']['rich_text'])
+            text = rich_text_to_markdown(block['heading_1']['rich_text'], notion_id_to_url)
             markdown_lines.append(f'# {text}')
             markdown_lines.append('')
 
         elif block_type == 'heading_2':
-            text = rich_text_to_markdown(block['heading_2']['rich_text'])
+            text = rich_text_to_markdown(block['heading_2']['rich_text'], notion_id_to_url)
             markdown_lines.append(f'## {text}')
             markdown_lines.append('')
 
         elif block_type == 'heading_3':
-            text = rich_text_to_markdown(block['heading_3']['rich_text'])
+            text = rich_text_to_markdown(block['heading_3']['rich_text'], notion_id_to_url)
             markdown_lines.append(f'### {text}')
             markdown_lines.append('')
 
         elif block_type == 'bulleted_list_item':
-            text = rich_text_to_markdown(block['bulleted_list_item']['rich_text'])
+            text = rich_text_to_markdown(block['bulleted_list_item']['rich_text'], notion_id_to_url)
             markdown_lines.append(f'- {text}')
 
         elif block_type == 'numbered_list_item':
-            text = rich_text_to_markdown(block['numbered_list_item']['rich_text'])
+            text = rich_text_to_markdown(block['numbered_list_item']['rich_text'], notion_id_to_url)
             markdown_lines.append(f'1. {text}')
 
         elif block_type == 'code':
@@ -252,7 +275,7 @@ def blocks_to_markdown(blocks, notion=None):
 
         elif block_type == 'callout':
             # Keep as HTML for convert_callouts() to process
-            text = rich_text_to_markdown(block['callout']['rich_text'])
+            text = rich_text_to_markdown(block['callout']['rich_text'], notion_id_to_url)
             color = block['callout'].get('color', 'blue')
 
             # Create HTML aside (emoji icon is used for type detection but not included in output)
@@ -267,20 +290,20 @@ def blocks_to_markdown(blocks, notion=None):
                 for child in children:
                     child_type = child['type']
                     if child_type == 'bulleted_list_item':
-                        child_text = rich_text_to_markdown(child['bulleted_list_item']['rich_text'])
+                        child_text = rich_text_to_markdown(child['bulleted_list_item']['rich_text'], notion_id_to_url)
                         markdown_lines.append(f'- {child_text}')
                     elif child_type == 'numbered_list_item':
-                        child_text = rich_text_to_markdown(child['numbered_list_item']['rich_text'])
+                        child_text = rich_text_to_markdown(child['numbered_list_item']['rich_text'], notion_id_to_url)
                         markdown_lines.append(f'1. {child_text}')
                     elif child_type == 'paragraph':
-                        child_text = rich_text_to_markdown(child['paragraph']['rich_text'])
+                        child_text = rich_text_to_markdown(child['paragraph']['rich_text'], notion_id_to_url)
                         markdown_lines.append(child_text)
 
             markdown_lines.append('</aside>')
             markdown_lines.append('')
 
         elif block_type == 'quote':
-            text = rich_text_to_markdown(block['quote']['rich_text'])
+            text = rich_text_to_markdown(block['quote']['rich_text'], notion_id_to_url)
             markdown_lines.append(f'> {text}')
             markdown_lines.append('')
 
@@ -577,6 +600,48 @@ def get_existing_posts_with_notion_id():
             
     return notion_posts
 
+def build_notion_id_to_url_mapping():
+    """Build a mapping from Notion IDs to blog post URLs
+    
+    Returns:
+        dict: notion_id -> blog_post_url (relative URL)
+    """
+    posts_dir = REPO_ROOT / '_posts'
+    notion_id_to_url = {}
+    
+    if not posts_dir.exists():
+        return notion_id_to_url
+    
+    for filepath in posts_dir.glob('*.md'):
+        if filepath.name == '.placeholder':
+            continue
+            
+        try:
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Parse front matter
+            front_matter, _ = parse_front_matter(content)
+            
+            if front_matter:
+                notion_id = front_matter.get('notion_id')
+                if notion_id:
+                    # Generate the blog post URL from the filename
+                    # Format: YYYY-MM-DD-slug.md -> /blog/posts/slug/
+                    filename = filepath.stem  # Remove .md extension
+                    parts = filename.split('-', 3)  # Split into date parts and slug
+                    if len(parts) >= 4:
+                        # parts = [YYYY, MM, DD, slug]
+                        slug = parts[3]
+                        # Jekyll/Chirpy URL format: /blog/posts/slug/
+                        blog_url = f'/blog/posts/{slug}/'
+                        notion_id_to_url[str(notion_id)] = blog_url
+                
+        except Exception as e:
+            print(f"  ⚠ Warning: Could not read {filepath} for URL mapping: {e}")
+            
+    return notion_id_to_url
+
 def extract_image_paths_from_post(filepath):
     """Extract all image paths from a post file"""
     image_paths = []
@@ -705,6 +770,11 @@ def sync_notion_posts(dry_run=False):
     
     # Get existing posts once for efficiency (avoid O(n²) complexity)
     existing_posts_map = get_existing_posts_with_notion_id()
+    
+    # Build mapping of Notion IDs to blog post URLs for internal linking
+    print("Building Notion ID to URL mapping for internal links...")
+    notion_id_to_url = build_notion_id_to_url_mapping()
+    print(f"  ✓ Found {len(notion_id_to_url)} existing posts for linking\n")
 
     for i, page in enumerate(posts, start=1):
         try:
@@ -725,8 +795,8 @@ def sync_notion_posts(dry_run=False):
             blocks = get_page_content(notion, page['id'])
             print(f"  ✓ Retrieved {len(blocks)} content blocks")
 
-            # Convert to markdown
-            markdown = blocks_to_markdown(blocks, notion)
+            # Convert to markdown with Notion page link support
+            markdown = blocks_to_markdown(blocks, notion, notion_id_to_url)
             print(f"  ✓ Converted to markdown")
 
             # Generate slug
