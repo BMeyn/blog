@@ -200,17 +200,20 @@ def rich_text_to_markdown(rich_text_array, notion_id_to_url=None):
 
         # Handle page mentions - convert Notion page links to blog post links
         if text_obj.get('type') == 'mention' and text_obj.get('mention', {}).get('type') == 'page':
-            mention = text_obj['mention']
-            page_id = mention['page']['id']
+            mention = text_obj.get('mention', {})
+            page_info = mention.get('page', {})
+            page_id = page_info.get('id')
             
-            # Try to find the corresponding blog post URL
-            if notion_id_to_url and page_id in notion_id_to_url:
-                blog_url = notion_id_to_url[page_id]
-                text = f'[{text}]({blog_url})'
-            elif text_obj.get('href'):
-                # Fallback to original Notion link if no mapping exists
-                text = f'[{text}]({text_obj["href"]})'
-            # If no href either, keep as plain text (should not happen in normal cases)
+            # Only process if we have a valid page ID
+            if page_id:
+                # Try to find the corresponding blog post URL
+                if notion_id_to_url and page_id in notion_id_to_url:
+                    blog_url = notion_id_to_url[page_id]
+                    text = f'[{text}]({blog_url})'
+                elif text_obj.get('href'):
+                    # Fallback to original Notion link if no mapping exists
+                    text = f'[{text}]({text_obj["href"]})'
+                # If no href either, keep as plain text (should not happen in normal cases)
         # Handle regular links
         elif text_obj.get('href'):
             text = f'[{text}]({text_obj["href"]})'
@@ -613,8 +616,16 @@ def get_existing_posts_with_notion_id():
 def build_notion_id_to_url_mapping():
     """Build a mapping from Notion IDs to blog post URLs
     
+    This function scans all existing posts in _posts/ to build a mapping
+    that allows converting Notion page mentions to internal blog links.
+    
+    Performance Note:
+        The mapping is rebuilt on every sync. For large blogs (100+ posts),
+        consider caching this mapping or only rebuilding when _posts/ changes.
+        Current implementation prioritizes simplicity and correctness.
+    
     Returns:
-        dict: notion_id -> blog_post_url (relative URL)
+        dict: notion_id (str) -> blog_post_url (str, relative URL)
     """
     posts_dir = REPO_ROOT / '_posts'
     notion_id_to_url = {}
@@ -636,17 +647,25 @@ def build_notion_id_to_url_mapping():
             if front_matter:
                 notion_id = front_matter.get('notion_id')
                 if notion_id:
+                    # Ensure notion_id is consistently a string
+                    notion_id_str = str(notion_id)
+                    
                     # Generate the blog post URL from the filename
                     # Format: YYYY-MM-DD-slug.md -> /blog/posts/slug/
                     filename = filepath.stem  # Remove .md extension
                     # Split into date parts and slug, preserving hyphens in slug
                     parts = filename.split('-', 3)  # maxsplit=3: [YYYY, MM, DD, rest-of-slug]
-                    if len(parts) == 4:
+                    
+                    # Validate filename format (basic date validation)
+                    if (len(parts) == 4 and 
+                        len(parts[0]) == 4 and parts[0].isdigit() and  # YYYY
+                        len(parts[1]) == 2 and parts[1].isdigit() and  # MM
+                        len(parts[2]) == 2 and parts[2].isdigit()):     # DD
                         # parts = [YYYY, MM, DD, slug-with-hyphens]
                         slug = parts[3]
                         # Use constants for URL format
                         blog_url = f'{BLOG_BASE_URL}{BLOG_POSTS_URL_FORMAT.format(slug=slug)}'
-                        notion_id_to_url[str(notion_id)] = blog_url
+                        notion_id_to_url[notion_id_str] = blog_url
                 
         except Exception as e:
             print(f"  ⚠ Warning: Could not read {filepath} for URL mapping: {e}")
