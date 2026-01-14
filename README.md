@@ -156,6 +156,28 @@ This blog supports automated synchronization of blog posts from Notion to Jekyll
 - ✅ Converts Notion callouts to Jekyll prompt format
 - ✅ Upgrades HTTP links to HTTPS
 - ✅ **Deletes posts that are no longer in Notion** (preventing duplicates from renamed posts)
+- ✅ **Converts Notion page links to internal blog post links**
+
+#### Internal Linking Between Posts
+
+When you link to another Notion page from within a post (using Notion's page mention feature), the sync script automatically converts it to an internal blog post link:
+
+- **In Notion**: Link to another page using `@` mention or inline page link
+- **In Blog**: Automatically becomes `/blog/posts/slug-of-linked-post/`
+
+**How it works**:
+1. The sync script builds a mapping of all existing posts (notion_id → blog URL)
+2. When converting content, page mentions are detected
+3. If the mentioned page has been synced as a blog post, it links to the blog URL
+4. If not found, it falls back to the original Notion URL
+
+**Example**:
+```
+Notion: Check out @My Other Post for more details
+Blog:   Check out [My Other Post](/blog/posts/my-other-post/) for more details
+```
+
+This enables a seamless internal linking experience where readers stay on your blog instead of being redirected to Notion.
 
 #### How Deletion Works
 

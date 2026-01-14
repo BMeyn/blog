@@ -8,6 +8,7 @@ Downloads images, converts content to Markdown, and generates Jekyll front matte
 Converts Notion callout blocks to Jekyll blockquote format.
 Upgrades HTTP links to HTTPS.
 Deletes posts that are no longer in Notion with status "Posted".
+Converts Notion page mentions to internal blog post links.
 
 Usage: python3 tools/sync_notion.py
 
@@ -16,6 +17,12 @@ Migration Note:
   - Only posts with 'notion_id' will be managed (updated/deleted) by this script
   - Posts without 'notion_id' are ignored and won't be deleted
   - This allows manual posts to coexist with Notion-synced posts
+
+Internal Linking:
+  - When a Notion page contains a link to another Notion page (page mention),
+    the script automatically converts it to an internal blog post link
+  - Only works for pages that have already been synced (have a notion_id)
+  - If no matching blog post is found, falls back to the original Notion URL
 """
 
 import os
