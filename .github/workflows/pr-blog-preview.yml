@@ -1,0 +1,108 @@
+name: "PR Blog Preview"
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - '_posts/*.md'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  update-pr-description:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed markdown files and update PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the list of changed markdown files in _posts folder
+          changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | grep '^_posts/.*\.md$' || true)
+          
+          if [ -z "$changed_files" ]; then
+            echo "No markdown files changed in _posts folder"
+            exit 0
+          fi
+          
+          echo "Changed files:"
+          echo "$changed_files"
+          
+          # Get current PR description
+          current_description=$(gh pr view ${{ github.event.pull_request.number }} --json body --jq '.body // ""')
+          
+          # Create temporary file for new description
+          temp_file=$(mktemp)
+          
+          # Remove existing auto-generated content if it exists
+          if echo "$current_description" | grep -q "<!-- AUTO-GENERATED BLOG PREVIEW START -->"; then
+            echo "$current_description" | sed '/<!-- AUTO-GENERATED BLOG PREVIEW START -->/,/<!-- AUTO-GENERATED BLOG PREVIEW END -->/d' > "$temp_file"
+          else
+            echo "$current_description" > "$temp_file"
+          fi
+          
+          # Add separator if there's existing content
+          if [ -s "$temp_file" ]; then
+            echo "" >> "$temp_file"
+            echo "" >> "$temp_file"
+          fi
+          
+          # Add blog content section header
+          cat >> "$temp_file" << 'EOF'
+          <!-- AUTO-GENERATED BLOG PREVIEW START -->
+          ## 📝 Blog Post Preview
+          
+          The following blog post content has been added or modified in this PR:
+          
+          EOF
+          
+          # Process each changed file
+          echo "$changed_files" | while read -r file; do
+            if [ -f "$file" ]; then
+              echo "Processing file: $file"
+              filename=$(basename "$file")
+              
+              # Add file header
+              echo "### 📄 \`$filename\`" >> "$temp_file"
+              echo "" >> "$temp_file"
+              
+              # Extract and display YAML front matter
+              if head -n 1 "$file" | grep -q "^---$"; then
+                echo "**Front Matter:**" >> "$temp_file"
+                echo '```yaml' >> "$temp_file"
+                sed -n '1,/^---$/p' "$file" | head -n -1 | tail -n +2 >> "$temp_file"
+                echo '```' >> "$temp_file"
+                echo "" >> "$temp_file"
+                echo "**Content:**" >> "$temp_file"
+                echo "" >> "$temp_file"
+                
+                # Add the markdown content (skip front matter)
+                sed '1,/^---$/d' "$file" | tail -n +2 >> "$temp_file"
+              else
+                # No front matter, just add the content
+                cat "$file" >> "$temp_file"
+              fi
+              
+              echo "" >> "$temp_file"
+              echo "---" >> "$temp_file"
+              echo "" >> "$temp_file"
+            fi
+          done
+          
+          # Add closing marker
+          echo "<!-- AUTO-GENERATED BLOG PREVIEW END -->" >> "$temp_file"
+          
+          # Update PR description
+          gh pr edit ${{ github.event.pull_request.number }} --body-file "$temp_file"
+          
+          # Clean up
+          rm "$temp_file"
+          
+          echo "✅ PR description updated with blog post content"
